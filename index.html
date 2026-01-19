@@ -1027,6 +1027,113 @@
       width: 8px;
     }
 
+    /* Search and Sort Section */
+    .search-sort-section {
+      background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+      border: 2px solid #3d1515;
+      border-radius: 4px;
+      padding: 20px;
+      margin-bottom: 25px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 1rem;
+    }
+
+    .sort-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sort-controls label {
+      margin-bottom: 0;
+      white-space: nowrap;
+    }
+
+    .sort-controls select {
+      padding: 10px 14px;
+      border: 1px solid #3d1515;
+      border-radius: 3px;
+      background: rgba(0,0,0,0.4);
+      color: #d4c4a8;
+      font-size: 1rem;
+      font-family: 'Crimson Text', serif;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .sort-controls select:focus {
+      outline: none;
+      border-color: #8b0000;
+      background: rgba(139, 0, 0, 0.1);
+    }
+
+    .sort-controls select option {
+      background: #1a0808;
+      color: #d4c4a8;
+    }
+
+    .quick-filters {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      padding-top: 15px;
+      border-top: 1px solid #3d1515;
+      margin-top: 5px;
+    }
+
+    .quick-filter-label {
+      color: #c9a227;
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+    }
+
+    .quick-filter-btn {
+      padding: 8px 14px;
+      background: rgba(139, 0, 0, 0.2);
+      border: 1px solid #5a1515;
+      border-radius: 3px;
+      color: #d4c4a8;
+      font-family: 'Crimson Text', serif;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .quick-filter-btn:hover {
+      background: rgba(139, 0, 0, 0.4);
+      border-color: #8b0000;
+      transform: translateY(-2px);
+    }
+
+    .quick-filter-btn.active {
+      background: linear-gradient(180deg, #4a0000 0%, #2d0808 100%);
+      border-color: #c9a227;
+      color: #c9a227;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 40px 20px;
+      color: rgba(212, 196, 168, 0.5);
+      font-style: italic;
+      grid-column: 1 / -1;
+    }
+
     ::-webkit-scrollbar-track {
       background: #0d0404;
     }
@@ -1171,6 +1278,30 @@
         </div>
       </div>
 
+      <!-- Search and Sort Controls -->
+      <div class="search-sort-section">
+        <div class="search-box">
+          <input type="text" id="entrySearchInput" placeholder="🔍 Search entries by title or text..." oninput="applyFilters()">
+        </div>
+        <div class="sort-controls">
+          <label>Sort by:</label>
+          <select id="sortSelect" onchange="applyFilters()">
+            <option value="date-desc">Newest First</option>
+            <option value="date-asc">Oldest First</option>
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="name-desc">Name (Z-A)</option>
+          </select>
+        </div>
+        <div class="quick-filters">
+          <span class="quick-filter-label">Quick Filters:</span>
+          <button class="quick-filter-btn" onclick="quickFilter('Character')">👤 Character</button>
+          <button class="quick-filter-btn" onclick="quickFilter('Location')">📍 Location</button>
+          <button class="quick-filter-btn" onclick="quickFilter('Item')">⚔️ Item</button>
+          <button class="quick-filter-btn" onclick="quickFilter('NPC')">🧙 NPC</button>
+          <button class="quick-filter-btn" onclick="quickFilter('Monster')">👹 Monster</button>
+        </div>
+      </div>
+
       <!-- Gallery -->
       <div class="gallery" id="gallery">
         <div class="empty-state" id="emptyState">
@@ -1284,6 +1415,11 @@
     let selectedImage = null;
     let selectedImageFile = null;
     let currentUser = null;
+    let searchQuery = '';
+    let currentSort = 'date-desc';
+    
+    // Default tags that should always exist
+    const defaultTags = ['Character', 'Location', 'Item', 'NPC', 'Monster'];
 
     // DOM Elements
     const imageInput = document.getElementById('imageInput');
@@ -1358,6 +1494,18 @@
         const tagsDoc = await db.collection('users').doc(currentUser.uid).collection('data').doc('tags').get();
         if (tagsDoc.exists) {
           tags = tagsDoc.data().tags || [];
+        }
+        
+        // Ensure default tags exist
+        let tagsUpdated = false;
+        defaultTags.forEach(tag => {
+          if (!tags.includes(tag)) {
+            tags.push(tag);
+            tagsUpdated = true;
+          }
+        });
+        if (tagsUpdated) {
+          await saveTagsToFirestore();
         }
 
         // Load items
@@ -1647,20 +1795,101 @@
     function clearFilter() {
       currentFilter = null;
       activeFilter.classList.remove('visible');
+      // Clear quick filter buttons
+      document.querySelectorAll('.quick-filter-btn').forEach(btn => btn.classList.remove('active'));
       renderTags();
       renderGallery();
     }
 
+    // Apply search and sort filters
+    function applyFilters() {
+      searchQuery = document.getElementById('entrySearchInput').value.toLowerCase();
+      currentSort = document.getElementById('sortSelect').value;
+      renderGallery();
+    }
+
+    // Quick filter by default tag
+    function quickFilter(tag) {
+      // Toggle the filter
+      if (currentFilter === tag) {
+        clearFilter();
+      } else {
+        currentFilter = tag;
+        filterName.textContent = tag;
+        activeFilter.classList.add('visible');
+        
+        // Update quick filter button states
+        document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+          btn.classList.remove('active');
+          if (btn.textContent.includes(tag)) {
+            btn.classList.add('active');
+          }
+        });
+        
+        renderTags();
+        renderGallery();
+      }
+    }
+
+    // Sort items based on current sort selection
+    function sortItems(itemsToSort) {
+      const sorted = [...itemsToSort];
+      
+      switch (currentSort) {
+        case 'date-desc':
+          sorted.sort((a, b) => {
+            const dateA = a.createdAt?.toDate?.() || new Date(parseInt(a.id));
+            const dateB = b.createdAt?.toDate?.() || new Date(parseInt(b.id));
+            return dateB - dateA;
+          });
+          break;
+        case 'date-asc':
+          sorted.sort((a, b) => {
+            const dateA = a.createdAt?.toDate?.() || new Date(parseInt(a.id));
+            const dateB = b.createdAt?.toDate?.() || new Date(parseInt(b.id));
+            return dateA - dateB;
+          });
+          break;
+        case 'name-asc':
+          sorted.sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase()));
+          break;
+        case 'name-desc':
+          sorted.sort((a, b) => b.title.toLowerCase().localeCompare(a.title.toLowerCase()));
+          break;
+      }
+      
+      return sorted;
+    }
+
     // Render gallery
     function renderGallery() {
-      const filteredItems = currentFilter
-        ? items.filter(item => item.tags.includes(currentFilter))
-        : items;
+      // Start with all items
+      let filteredItems = [...items];
+      
+      // Apply tag filter
+      if (currentFilter) {
+        filteredItems = filteredItems.filter(item => item.tags.includes(currentFilter));
+      }
+      
+      // Apply search filter
+      if (searchQuery) {
+        filteredItems = filteredItems.filter(item => 
+          item.title.toLowerCase().includes(searchQuery) ||
+          (item.text && item.text.toLowerCase().includes(searchQuery))
+        );
+      }
+      
+      // Apply sorting
+      filteredItems = sortItems(filteredItems);
 
       if (filteredItems.length === 0) {
-        emptyState.style.display = 'block';
-        gallery.innerHTML = '';
-        gallery.appendChild(emptyState);
+        if (items.length === 0) {
+          emptyState.style.display = 'block';
+          gallery.innerHTML = '';
+          gallery.appendChild(emptyState);
+        } else {
+          gallery.innerHTML = '<div class="no-results">No entries match your search or filter.</div>';
+        }
         return;
       }
 
