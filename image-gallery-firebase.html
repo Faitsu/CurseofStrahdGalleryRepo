@@ -1,0 +1,2003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Curse of Strahd Database</title>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Crimson Text', Georgia, serif;
+      background: 
+        radial-gradient(ellipse at top, #1a0a0a 0%, #0d0505 50%, #000000 100%);
+      min-height: 100vh;
+      color: #d4c4a8;
+      padding: 20px;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L30 60M0 30L60 30' stroke='%23200808' stroke-width='1'/%3E%3C/svg%3E");
+      opacity: 0.3;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #8b0000;
+      font-size: 2.5rem;
+      font-family: 'Cinzel', serif;
+      text-shadow: 0 0 20px rgba(139, 0, 0, 0.5), 2px 2px 4px rgba(0,0,0,0.8);
+      letter-spacing: 3px;
+    }
+
+    /* Auth Section */
+    .auth-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+      border: 2px solid #3d1515;
+      border-radius: 4px;
+    }
+
+    .auth-section.logged-out {
+      flex-direction: column;
+      padding: 40px;
+    }
+
+    .auth-message {
+      font-family: 'Cinzel', serif;
+      color: #c9a227;
+      font-size: 1.1rem;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-avatar {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      border: 2px solid #8b0000;
+    }
+
+    .user-name {
+      color: #c9a227;
+      font-family: 'Cinzel', serif;
+    }
+
+    .btn-google {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 24px;
+      background: linear-gradient(180deg, #2d0a0a 0%, #1a0505 100%);
+      border: 2px solid #8b0000;
+      border-radius: 4px;
+      color: #d4c4a8;
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-google:hover {
+      background: linear-gradient(180deg, #4a0000 0%, #2d0a0a 100%);
+      box-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .btn-google img {
+      width: 20px;
+      height: 20px;
+    }
+
+    .btn-signout {
+      padding: 8px 16px;
+      background: rgba(139, 0, 0, 0.3);
+      border: 1px solid #5a1515;
+      border-radius: 3px;
+      color: #d4c4a8;
+      cursor: pointer;
+      font-family: 'Crimson Text', serif;
+      transition: all 0.2s;
+    }
+
+    .btn-signout:hover {
+      background: rgba(139, 0, 0, 0.5);
+      border-color: #8b0000;
+    }
+
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid #3d1515;
+      border-top-color: #8b0000;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .loading-text {
+      margin-top: 15px;
+      color: #c9a227;
+      font-family: 'Cinzel', serif;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .main-content {
+      display: none;
+    }
+
+    .main-content.visible {
+      display: block;
+    }
+
+    .sync-status {
+      font-size: 0.8rem;
+      color: rgba(212, 196, 168, 0.6);
+      margin-left: 10px;
+    }
+
+    .sync-status.syncing {
+      color: #c9a227;
+    }
+
+    .sync-status.error {
+      color: #ff6666;
+    }
+
+    /* Filter Display */
+    .active-filter {
+      text-align: center;
+      padding: 15px;
+      background: linear-gradient(135deg, #4a0000 0%, #8b0000 50%, #4a0000 100%);
+      border-radius: 4px;
+      margin-bottom: 20px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      border: 2px solid #c9a227;
+      box-shadow: 0 0 20px rgba(139, 0, 0, 0.4), inset 0 0 30px rgba(0,0,0,0.5);
+      font-family: 'Cinzel', serif;
+      letter-spacing: 2px;
+    }
+
+    .active-filter.visible {
+      display: flex;
+    }
+
+    .active-filter .clear-filter {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid #c9a227;
+      color: #c9a227;
+      padding: 5px 15px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.3s;
+      font-family: 'Crimson Text', serif;
+    }
+
+    .active-filter .clear-filter:hover {
+      background: rgba(201, 162, 39, 0.2);
+      box-shadow: 0 0 10px rgba(201, 162, 39, 0.3);
+    }
+
+    /* Controls Section */
+    .controls {
+      background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+      border-radius: 4px;
+      padding: 25px;
+      margin-bottom: 25px;
+      border: 2px solid #3d1515;
+      box-shadow: 0 5px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(139, 0, 0, 0.2);
+      position: relative;
+    }
+
+    .controls::before {
+      content: '☩';
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.5rem;
+      color: #8b0000;
+      background: #0d0404;
+      padding: 0 15px;
+    }
+
+    .upload-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: flex-end;
+    }
+
+    .upload-section > div {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: #c9a227;
+      font-weight: 600;
+      font-size: 0.95rem;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 1px;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #3d1515;
+      border-radius: 3px;
+      background: rgba(0,0,0,0.4);
+      color: #d4c4a8;
+      font-size: 1rem;
+      font-family: 'Crimson Text', serif;
+      transition: all 0.3s;
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: #8b0000;
+      background: rgba(139, 0, 0, 0.1);
+      box-shadow: 0 0 10px rgba(139, 0, 0, 0.3);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .file-label {
+      display: inline-block;
+      padding: 10px 20px;
+      background: linear-gradient(180deg, #2d0a0a 0%, #1a0505 100%);
+      border: 1px solid #8b0000;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+      color: #c9a227;
+      font-family: 'Cinzel', serif;
+    }
+
+    .file-label:hover {
+      background: linear-gradient(180deg, #4a0000 0%, #2d0a0a 100%);
+      box-shadow: 0 0 15px rgba(139, 0, 0, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .btn {
+      padding: 10px 25px;
+      border: 1px solid;
+      border-radius: 3px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.3s;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 1px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, #4a0000 0%, #2d0808 100%);
+      border-color: #8b0000;
+      color: #c9a227;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(180deg, #6b0000 0%, #4a0000 100%);
+      box-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-share {
+      background: linear-gradient(180deg, #1a1a2e 0%, #0d0d1a 100%);
+      border-color: #4a4a8a;
+      color: #8888cc;
+    }
+
+    .btn-share:hover {
+      background: linear-gradient(180deg, #2a2a4e 0%, #1a1a2e 100%);
+      box-shadow: 0 0 15px rgba(74, 74, 138, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .btn-import {
+      background: linear-gradient(180deg, #2d2d0a 0%, #1a1a05 100%);
+      border-color: #8b8b00;
+      color: #c9c927;
+    }
+
+    .btn-import:hover {
+      background: linear-gradient(180deg, #4a4a00 0%, #2d2d0a 100%);
+      box-shadow: 0 0 15px rgba(139, 139, 0, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .share-section {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #3d1515;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .share-section h3 {
+      color: #c9a227;
+      font-size: 1.1rem;
+      width: 100%;
+      margin-bottom: 10px;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 1px;
+    }
+
+    .share-info {
+      color: rgba(212, 196, 168, 0.6);
+      font-size: 0.9rem;
+      width: 100%;
+      margin-top: 10px;
+      font-style: italic;
+    }
+
+    .copy-link-section {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .copy-link-section input {
+      flex: 1;
+      font-size: 0.85rem;
+    }
+
+    .btn-copy {
+      background: linear-gradient(180deg, #2d1a0a 0%, #1a0f05 100%);
+      border-color: #8b5a00;
+      color: #c9a227;
+      white-space: nowrap;
+    }
+
+    .btn-copy:hover {
+      background: linear-gradient(180deg, #4a2d0a 0%, #2d1a0a 100%);
+      box-shadow: 0 0 15px rgba(139, 90, 0, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: linear-gradient(180deg, #2d0a0a 0%, #1a0505 100%);
+      border: 1px solid #c9a227;
+      color: #c9a227;
+      padding: 12px 24px;
+      border-radius: 3px;
+      font-weight: 500;
+      z-index: 2000;
+      transition: transform 0.3s ease;
+      box-shadow: 0 5px 30px rgba(0,0,0,0.5);
+      font-family: 'Cinzel', serif;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.error {
+      background: linear-gradient(180deg, #4a0000 0%, #2d0000 100%);
+      border-color: #ff4444;
+      color: #ff8888;
+    }
+
+    /* Tags Section */
+    .tags-section {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #3d1515;
+    }
+
+    .tags-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .tags-header h3 {
+      color: #c9a227;
+      font-size: 1.1rem;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 1px;
+    }
+
+    .tag-input-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .tag-input-group input {
+      width: 200px;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .tag-item {
+      background: rgba(139, 0, 0, 0.2);
+      border: 1px solid #5a1515;
+      padding: 8px 16px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Cinzel', serif;
+    }
+
+    .tag-item:hover {
+      background: rgba(139, 0, 0, 0.3);
+      border-color: #8b0000;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+
+    .tag-item.active {
+      background: linear-gradient(180deg, #4a0000 0%, #2d0808 100%);
+      border-color: #c9a227;
+      box-shadow: 0 0 15px rgba(139, 0, 0, 0.4);
+    }
+
+    .tag-item .tag-count {
+      background: rgba(0,0,0,0.4);
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 0.8rem;
+      color: #c9a227;
+    }
+
+    .tag-item .delete-tag {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #5a1515;
+      color: #d4c4a8;
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: all 0.2s;
+    }
+
+    .tag-item:hover .delete-tag {
+      opacity: 1;
+    }
+
+    .tag-item .delete-tag:hover {
+      background: #8b0000;
+      border-color: #8b0000;
+    }
+
+    /* Image Preview */
+    .image-preview {
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    .image-preview img {
+      max-width: 200px;
+      max-height: 150px;
+      border-radius: 3px;
+      border: 2px solid #5a1515;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    }
+
+    /* Gallery */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 25px;
+    }
+
+    .gallery-item {
+      background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 2px solid #3d1515;
+      transition: all 0.4s;
+      position: relative;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+    }
+
+    .gallery-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #8b0000, transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .gallery-item:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 15px 40px rgba(139, 0, 0, 0.3), 0 5px 20px rgba(0,0,0,0.5);
+      border-color: #8b0000;
+    }
+
+    .gallery-item:hover::before {
+      opacity: 1;
+    }
+
+    .gallery-item .image-container {
+      position: relative;
+      aspect-ratio: 1;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s;
+      filter: sepia(10%) contrast(1.05);
+    }
+
+    .gallery-item:hover img {
+      transform: scale(1.08);
+    }
+
+    .gallery-item .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(13, 4, 4, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.4s;
+      text-align: center;
+      overflow-y: auto;
+    }
+
+    .gallery-item:hover .overlay,
+    .gallery-item .overlay.active {
+      opacity: 1;
+    }
+
+    .gallery-item .overlay p {
+      color: #d4c4a8;
+      line-height: 1.7;
+      font-size: 1rem;
+      white-space: pre-wrap;
+      font-style: italic;
+    }
+
+    .gallery-item .item-footer {
+      padding: 15px;
+      border-top: 1px solid #3d1515;
+    }
+
+    .gallery-item .title-input {
+      width: 100%;
+      background: transparent;
+      border: 1px solid transparent;
+      color: #c9a227;
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding: 5px 8px;
+      border-radius: 3px;
+      text-align: center;
+      transition: all 0.3s;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 1px;
+    }
+
+    .gallery-item .title-input:hover {
+      border-color: #3d1515;
+    }
+
+    .gallery-item .title-input:focus {
+      outline: none;
+      border-color: #8b0000;
+      background: rgba(139, 0, 0, 0.1);
+    }
+
+    .gallery-item .item-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+      justify-content: center;
+    }
+
+    .gallery-item .item-tag {
+      background: rgba(139, 0, 0, 0.3);
+      border: 1px solid #5a1515;
+      padding: 4px 10px;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #d4c4a8;
+    }
+
+    .gallery-item .item-tag:hover {
+      background: rgba(139, 0, 0, 0.5);
+      border-color: #8b0000;
+    }
+
+    .gallery-item .item-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      justify-content: center;
+    }
+
+    .gallery-item .item-actions button {
+      padding: 6px 12px;
+      border: 1px solid;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+      font-family: 'Crimson Text', serif;
+    }
+
+    .gallery-item .edit-tags-btn {
+      background: rgba(139, 0, 0, 0.2);
+      border-color: #5a1515;
+      color: #d4c4a8;
+    }
+
+    .gallery-item .edit-tags-btn:hover {
+      background: rgba(139, 0, 0, 0.4);
+      border-color: #8b0000;
+    }
+
+    .gallery-item .delete-btn {
+      background: rgba(80, 0, 0, 0.3);
+      border-color: #5a1515;
+      color: #d4c4a8;
+    }
+
+    .gallery-item .delete-btn:hover {
+      background: rgba(139, 0, 0, 0.5);
+      border-color: #aa0000;
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+
+    .modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-content {
+      background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+      border-radius: 4px;
+      padding: 25px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      border: 2px solid #5a1515;
+      box-shadow: 0 10px 50px rgba(0,0,0,0.8), 0 0 30px rgba(139, 0, 0, 0.3);
+    }
+
+    /* Detail Modal - larger for viewing */
+    .modal-content.detail-modal {
+      max-width: 800px;
+      max-height: 90vh;
+    }
+
+    .detail-modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .detail-image-container {
+      text-align: center;
+      max-height: 400px;
+      overflow: hidden;
+    }
+
+    .detail-image-container img {
+      max-width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      border: 2px solid #5a1515;
+      border-radius: 4px;
+    }
+
+    .detail-text-container {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #3d1515;
+      border-radius: 4px;
+      padding: 20px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .detail-text-container p {
+      color: #d4c4a8;
+      line-height: 1.8;
+      font-size: 1.1rem;
+      white-space: pre-wrap;
+    }
+
+    .detail-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .detail-tag {
+      background: rgba(139, 0, 0, 0.3);
+      border: 1px solid #5a1515;
+      padding: 5px 12px;
+      border-radius: 3px;
+      font-size: 0.85rem;
+      color: #d4c4a8;
+    }
+
+    /* Edit Modal */
+    .modal-content.edit-modal {
+      max-width: 600px;
+    }
+
+    .edit-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .edit-form label {
+      margin-bottom: 5px;
+    }
+
+    .edit-image-preview {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .edit-image-preview img {
+      max-width: 200px;
+      max-height: 150px;
+      border: 2px solid #5a1515;
+      border-radius: 4px;
+    }
+
+    .edit-image-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #3d1515;
+    }
+
+    .modal-header h3 {
+      color: #c9a227;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 1px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: #8b0000;
+      font-size: 1.8rem;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      opacity: 1;
+      text-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
+    }
+
+    .modal-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .modal-tag {
+      padding: 8px 16px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 2px solid #5a1515;
+      background: transparent;
+      color: #d4c4a8;
+      font-family: 'Cinzel', serif;
+    }
+
+    .modal-tag:hover {
+      border-color: #8b0000;
+      background: rgba(139, 0, 0, 0.2);
+    }
+
+    .modal-tag.selected {
+      background: linear-gradient(180deg, #4a0000 0%, #2d0808 100%);
+      border-color: #c9a227;
+      color: #c9a227;
+    }
+
+    .modal-actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      padding-top: 15px;
+      border-top: 1px solid #3d1515;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.05);
+      border-color: #3d1515;
+      color: #d4c4a8;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(139, 0, 0, 0.2);
+      border-color: #5a1515;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: rgba(212, 196, 168, 0.5);
+    }
+
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+      opacity: 0.3;
+      stroke: #8b0000;
+    }
+
+    .empty-state p {
+      font-size: 1.1rem;
+      font-style: italic;
+    }
+
+    /* Tag Search */
+    #tagSearchInput {
+      width: 180px;
+    }
+
+    .no-tags-found {
+      color: rgba(212, 196, 168, 0.5);
+      font-style: italic;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .selected-tags-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 15px;
+    }
+
+    .selected-tags-preview:empty {
+      display: none;
+    }
+
+    .selected-tags-preview .preview-tag {
+      background: rgba(139, 0, 0, 0.3);
+      border: 1px solid #5a1515;
+      padding: 5px 12px;
+      border-radius: 3px;
+      font-size: 0.85rem;
+      color: #c9a227;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .selected-tags-preview .preview-tag.new-tag {
+      border-color: #c9a227;
+      background: rgba(201, 162, 39, 0.2);
+    }
+
+    .selected-tags-preview .preview-tag .tag-label {
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0d0404;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #3d1515;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #5a1515;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .upload-section {
+        flex-direction: column;
+      }
+
+      .upload-section > div {
+        width: 100%;
+      }
+
+      .gallery {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      }
+
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      .auth-section {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .tag-input-group {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .tag-input-group input {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Awakening the darkness...</div>
+  </div>
+
+  <div class="container">
+    <h1>🧛 Curse of Strahd Database</h1>
+
+    <!-- Auth Section -->
+    <div class="auth-section logged-out" id="authSection">
+      <p class="auth-message">Sign in to access your gallery</p>
+      <button class="btn-google" onclick="signInWithGoogle()">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+        Sign in with Google
+      </button>
+    </div>
+
+    <!-- Main Content (hidden until signed in) -->
+    <div class="main-content" id="mainContent">
+      
+      <!-- User Info Bar -->
+      <div class="auth-section" id="userBar">
+        <div class="user-info">
+          <img class="user-avatar" id="userAvatar" src="" alt="">
+          <span class="user-name" id="userName"></span>
+          <span class="sync-status" id="syncStatus"></span>
+        </div>
+        <button class="btn-signout" onclick="signOutUser()">Sign Out</button>
+      </div>
+
+      <!-- Active Filter Display -->
+      <div class="active-filter" id="activeFilter">
+        <span>Filtering by: <span id="filterName"></span></span>
+        <button class="clear-filter" onclick="clearFilter()">✕ Clear Filter</button>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <div class="upload-section">
+          <div>
+            <label>Image</label>
+            <label class="file-label" for="imageInput">
+              📁 Choose Image
+            </label>
+            <input type="file" id="imageInput" accept="image/*">
+          </div>
+          <div>
+            <label for="titleInput">Title</label>
+            <input type="text" id="titleInput" placeholder="Enter image title...">
+          </div>
+          <div>
+            <label for="textInput">Associated Text</label>
+            <textarea id="textInput" placeholder="Enter text to show on hover..."></textarea>
+          </div>
+          <div>
+            <label for="entryTagsInput">Tags</label>
+            <input type="text" id="entryTagsInput" placeholder="e.g. Character, NPC, Vallaki">
+          </div>
+          <div>
+            <button class="btn btn-primary" id="addBtn" onclick="addItem()" disabled>
+              + Add to Gallery
+            </button>
+          </div>
+        </div>
+
+        <div class="image-preview" id="imagePreview"></div>
+        
+        <!-- Selected Tags Preview -->
+        <div class="selected-tags-preview" id="selectedTagsPreview"></div>
+
+        <!-- Tags Section -->
+        <div class="tags-section">
+          <div class="tags-header">
+            <h3>🏷️ Tags</h3>
+            <div class="tag-input-group">
+              <input type="text" id="tagSearchInput" placeholder="🔍 Search tags..." oninput="filterTagsList()">
+              <input type="text" id="newTagInput" placeholder="New tag name..." onkeypress="handleTagKeypress(event)">
+              <button class="btn btn-primary" onclick="createTag()">+ Create Tag</button>
+            </div>
+          </div>
+          <div class="tag-list" id="tagList"></div>
+          <div class="no-tags-found" id="noTagsFound" style="display: none;">No tags found matching your search.</div>
+        </div>
+
+        <!-- Share Section -->
+        <div class="share-section">
+          <h3>🔗 Share Gallery</h3>
+          <button class="btn btn-share" onclick="copyShareLink()">📋 Copy Share Link</button>
+          <button class="btn btn-share" onclick="exportGallery()">📤 Export JSON Backup</button>
+          <label class="btn btn-import" for="importInput">📥 Import JSON</label>
+          <input type="file" id="importInput" accept=".json" style="display:none">
+          <p class="share-info">Your gallery is stored in the cloud. Share the link to let others view it, or export a JSON backup.</p>
+        </div>
+      </div>
+
+      <!-- Gallery -->
+      <div class="gallery" id="gallery">
+        <div class="empty-state" id="emptyState">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <p>No images yet. Upload your first image above!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tag Edit Modal -->
+  <div class="modal" id="tagModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Edit Tags</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-tags" id="modalTags"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveTags()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail View Modal -->
+  <div class="modal" id="detailModal">
+    <div class="modal-content detail-modal">
+      <div class="modal-header">
+        <h3 id="detailTitle">Title</h3>
+        <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+      </div>
+      <div class="detail-modal-body">
+        <div class="detail-image-container">
+          <img id="detailImage" src="" alt="">
+        </div>
+        <div class="detail-text-container">
+          <p id="detailText"></p>
+        </div>
+        <div class="detail-tags" id="detailTags"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeDetailModal()">Close</button>
+        <button class="btn btn-primary" onclick="openEditFromDetail()">✏️ Edit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Item Modal -->
+  <div class="modal" id="editModal">
+    <div class="modal-content edit-modal">
+      <div class="modal-header">
+        <h3>Edit Entry</h3>
+        <button class="modal-close" onclick="closeEditModal()">&times;</button>
+      </div>
+      <div class="edit-form">
+        <div>
+          <label>Image</label>
+          <div class="edit-image-preview">
+            <img id="editImagePreview" src="" alt="">
+          </div>
+          <div class="edit-image-actions">
+            <label class="btn btn-secondary" for="editImageInput">📁 Change Image</label>
+            <input type="file" id="editImageInput" accept="image/*" style="display:none">
+          </div>
+        </div>
+        <div>
+          <label for="editTitleInput">Title</label>
+          <input type="text" id="editTitleInput" placeholder="Enter title...">
+        </div>
+        <div>
+          <label for="editTextInput">Associated Text</label>
+          <textarea id="editTextInput" rows="6" placeholder="Enter description text..."></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEdit()">💾 Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6VL1Tvxs9KdQxHrjUh5o0wn6mT5lljCE",
+      authDomain: "strahd-database.firebaseapp.com",
+      projectId: "strahd-database",
+      storageBucket: "strahd-database.firebasestorage.app",
+      messagingSenderId: "285558341322",
+      appId: "1:285558341322:web:37fd413ccff931eebc7e33",
+      measurementId: "G-TSZ7D1HS7D"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    // State
+    let items = [];
+    let tags = [];
+    let currentFilter = null;
+    let currentEditingItem = null;
+    let selectedImage = null;
+    let selectedImageFile = null;
+    let currentUser = null;
+
+    // DOM Elements
+    const imageInput = document.getElementById('imageInput');
+    const titleInput = document.getElementById('titleInput');
+    const textInput = document.getElementById('textInput');
+    const addBtn = document.getElementById('addBtn');
+    const imagePreview = document.getElementById('imagePreview');
+    const gallery = document.getElementById('gallery');
+    const emptyState = document.getElementById('emptyState');
+    const tagList = document.getElementById('tagList');
+    const newTagInput = document.getElementById('newTagInput');
+    const activeFilter = document.getElementById('activeFilter');
+    const filterName = document.getElementById('filterName');
+    const tagModal = document.getElementById('tagModal');
+    const modalTags = document.getElementById('modalTags');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const authSection = document.getElementById('authSection');
+    const mainContent = document.getElementById('mainContent');
+    const syncStatus = document.getElementById('syncStatus');
+
+    // Auth State Listener
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('userAvatar').src = user.photoURL || '';
+        document.getElementById('userName').textContent = user.displayName || user.email;
+        authSection.style.display = 'none';
+        mainContent.classList.add('visible');
+        await loadDataFromFirestore();
+      } else {
+        currentUser = null;
+        authSection.style.display = 'flex';
+        authSection.classList.add('logged-out');
+        mainContent.classList.remove('visible');
+        items = [];
+        tags = [];
+      }
+      loadingOverlay.style.display = 'none';
+    });
+
+    // Sign in with Google
+    async function signInWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      try {
+        loadingOverlay.style.display = 'flex';
+        await auth.signInWithPopup(provider);
+      } catch (error) {
+        console.error('Sign in error:', error);
+        showToast('Sign in failed: ' + error.message, true);
+        loadingOverlay.style.display = 'none';
+      }
+    }
+
+    // Sign out
+    async function signOutUser() {
+      try {
+        await auth.signOut();
+        showToast('Signed out successfully');
+      } catch (error) {
+        console.error('Sign out error:', error);
+        showToast('Sign out failed', true);
+      }
+    }
+
+    // Load data from Firestore
+    async function loadDataFromFirestore() {
+      if (!currentUser) return;
+      
+      setSyncStatus('Loading...');
+      try {
+        // Load tags
+        const tagsDoc = await db.collection('users').doc(currentUser.uid).collection('data').doc('tags').get();
+        if (tagsDoc.exists) {
+          tags = tagsDoc.data().tags || [];
+        }
+
+        // Load items
+        const itemsSnapshot = await db.collection('users').doc(currentUser.uid).collection('items').get();
+        items = [];
+        itemsSnapshot.forEach(doc => {
+          items.push({ id: doc.id, ...doc.data() });
+        });
+
+        renderTags();
+        renderGallery();
+        setSyncStatus('');
+      } catch (error) {
+        console.error('Load error:', error);
+        setSyncStatus('Error loading', true);
+        showToast('Failed to load data', true);
+      }
+    }
+
+    // Save tags to Firestore
+    async function saveTagsToFirestore() {
+      if (!currentUser) return;
+      
+      setSyncStatus('Saving...');
+      try {
+        await db.collection('users').doc(currentUser.uid).collection('data').doc('tags').set({ tags });
+        setSyncStatus('');
+      } catch (error) {
+        console.error('Save tags error:', error);
+        setSyncStatus('Error saving', true);
+      }
+    }
+
+    // Save item to Firestore
+    async function saveItemToFirestore(item) {
+      if (!currentUser) return;
+      
+      setSyncStatus('Saving...');
+      try {
+        await db.collection('users').doc(currentUser.uid).collection('items').doc(item.id).set(item);
+        setSyncStatus('');
+      } catch (error) {
+        console.error('Save item error:', error);
+        setSyncStatus('Error saving', true);
+        throw error;
+      }
+    }
+
+    // Delete item from Firestore
+    async function deleteItemFromFirestore(itemId) {
+      if (!currentUser) return;
+      
+      setSyncStatus('Deleting...');
+      try {
+        await db.collection('users').doc(currentUser.uid).collection('items').doc(itemId).delete();
+        setSyncStatus('');
+      } catch (error) {
+        console.error('Delete error:', error);
+        setSyncStatus('Error deleting', true);
+        throw error;
+      }
+    }
+
+    // Upload image to Firebase Storage
+    async function uploadImageToStorage(file, itemId) {
+      if (!currentUser) return null;
+      
+      const storageRef = storage.ref(`users/${currentUser.uid}/images/${itemId}`);
+      const snapshot = await storageRef.put(file);
+      const downloadURL = await snapshot.ref.getDownloadURL();
+      return downloadURL;
+    }
+
+    // Delete image from Firebase Storage
+    async function deleteImageFromStorage(itemId) {
+      if (!currentUser) return;
+      
+      try {
+        const storageRef = storage.ref(`users/${currentUser.uid}/images/${itemId}`);
+        await storageRef.delete();
+      } catch (error) {
+        // Image might not exist, ignore error
+        console.log('Image delete error (may not exist):', error);
+      }
+    }
+
+    // Set sync status
+    function setSyncStatus(text, isError = false) {
+      syncStatus.textContent = text;
+      syncStatus.className = 'sync-status' + (text ? ' syncing' : '') + (isError ? ' error' : '');
+    }
+
+    // Toast notification
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast' + (isError ? ' error' : '');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Image input handler
+    imageInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        selectedImageFile = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          selectedImage = e.target.result;
+          imagePreview.innerHTML = `<img src="${selectedImage}" alt="Preview">`;
+          addBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Add item
+    async function addItem() {
+      if (!selectedImageFile || !currentUser) return;
+
+      addBtn.disabled = true;
+      setSyncStatus('Uploading...');
+
+      try {
+        const itemId = Date.now().toString();
+        
+        // Upload image to Firebase Storage
+        const imageURL = await uploadImageToStorage(selectedImageFile, itemId);
+
+        // Parse tags from input
+        const tagsInput = document.getElementById('entryTagsInput').value;
+        const entryTags = tagsInput
+          .split(',')
+          .map(t => t.trim())
+          .filter(t => t.length > 0);
+
+        // Add any new tags to the global tags list
+        let tagsChanged = false;
+        entryTags.forEach(tag => {
+          if (!tags.includes(tag)) {
+            tags.push(tag);
+            tagsChanged = true;
+          }
+        });
+
+        if (tagsChanged) {
+          await saveTagsToFirestore();
+        }
+
+        const newItem = {
+          id: itemId,
+          image: imageURL,
+          title: titleInput.value || 'Untitled',
+          text: textInput.value || '',
+          tags: entryTags,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await saveItemToFirestore(newItem);
+        items.push(newItem);
+        
+        renderTags();
+        renderGallery();
+
+        // Reset form
+        selectedImage = null;
+        selectedImageFile = null;
+        imageInput.value = '';
+        titleInput.value = '';
+        textInput.value = '';
+        document.getElementById('entryTagsInput').value = '';
+        document.getElementById('selectedTagsPreview').innerHTML = '';
+        imagePreview.innerHTML = '';
+        
+        showToast('Entry added successfully!');
+      } catch (error) {
+        console.error('Add item error:', error);
+        showToast('Failed to add entry', true);
+        addBtn.disabled = false;
+      }
+    }
+
+    // Preview tags as user types
+    document.getElementById('entryTagsInput').addEventListener('input', (e) => {
+      const tagsInput = e.target.value;
+      const entryTags = tagsInput
+        .split(',')
+        .map(t => t.trim())
+        .filter(t => t.length > 0);
+
+      const preview = document.getElementById('selectedTagsPreview');
+      preview.innerHTML = entryTags.map(tag => {
+        const isNew = !tags.includes(tag);
+        return `
+          <span class="preview-tag ${isNew ? 'new-tag' : ''}">
+            ${tag}
+            ${isNew ? '<span class="tag-label">(new)</span>' : ''}
+          </span>
+        `;
+      }).join('');
+    });
+
+    // Create tag
+    async function createTag() {
+      const name = newTagInput.value.trim();
+      if (!name || tags.includes(name)) return;
+
+      tags.push(name);
+      await saveTagsToFirestore();
+      renderTags();
+      newTagInput.value = '';
+      showToast('Tag created!');
+    }
+
+    function handleTagKeypress(e) {
+      if (e.key === 'Enter') createTag();
+    }
+
+    // Delete tag
+    async function deleteTag(tagName, e) {
+      e.stopPropagation();
+      tags = tags.filter(t => t !== tagName);
+      
+      // Remove tag from all items
+      for (const item of items) {
+        if (item.tags.includes(tagName)) {
+          item.tags = item.tags.filter(t => t !== tagName);
+          await saveItemToFirestore(item);
+        }
+      }
+      
+      if (currentFilter === tagName) clearFilter();
+      await saveTagsToFirestore();
+      renderTags();
+      renderGallery();
+    }
+
+    // Render tags
+    function renderTags(searchFilter = '') {
+      const filteredTags = searchFilter 
+        ? tags.filter(tag => tag.toLowerCase().includes(searchFilter.toLowerCase()))
+        : tags;
+
+      const noTagsFound = document.getElementById('noTagsFound');
+      
+      if (filteredTags.length === 0 && searchFilter) {
+        tagList.innerHTML = '';
+        noTagsFound.style.display = 'block';
+        return;
+      }
+      
+      noTagsFound.style.display = 'none';
+
+      tagList.innerHTML = filteredTags.map(tag => {
+        const count = items.filter(item => item.tags.includes(tag)).length;
+        const isActive = currentFilter === tag;
+        return `
+          <div class="tag-item ${isActive ? 'active' : ''}" onclick="filterByTag('${tag}')">
+            <span>${tag}</span>
+            <span class="tag-count">${count}</span>
+            <button class="delete-tag" onclick="deleteTag('${tag}', event)">✕</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Filter tags list by search input
+    function filterTagsList() {
+      const searchValue = document.getElementById('tagSearchInput').value;
+      renderTags(searchValue);
+    }
+
+    // Filter by tag
+    function filterByTag(tag) {
+      if (currentFilter === tag) {
+        clearFilter();
+      } else {
+        currentFilter = tag;
+        filterName.textContent = tag;
+        activeFilter.classList.add('visible');
+        renderTags();
+        renderGallery();
+      }
+    }
+
+    // Clear filter
+    function clearFilter() {
+      currentFilter = null;
+      activeFilter.classList.remove('visible');
+      renderTags();
+      renderGallery();
+    }
+
+    // Render gallery
+    function renderGallery() {
+      const filteredItems = currentFilter
+        ? items.filter(item => item.tags.includes(currentFilter))
+        : items;
+
+      if (filteredItems.length === 0) {
+        emptyState.style.display = 'block';
+        gallery.innerHTML = '';
+        gallery.appendChild(emptyState);
+        return;
+      }
+
+      emptyState.style.display = 'none';
+
+      gallery.innerHTML = filteredItems.map(item => `
+        <div class="gallery-item" data-id="${item.id}">
+          <div class="image-container" onclick="openDetailModal('${item.id}')">
+            <img src="${item.image}" alt="${item.title}">
+            <div class="overlay" id="overlay-${item.id}">
+              <p>${item.text ? (item.text.length > 150 ? item.text.substring(0, 150) + '... (click to read more)' : item.text) : 'No description'}</p>
+            </div>
+          </div>
+          <div class="item-footer">
+            <input 
+              type="text" 
+              class="title-input" 
+              value="${item.title}" 
+              onchange="updateTitle('${item.id}', this.value)"
+              onclick="event.stopPropagation()"
+            >
+            <div class="item-tags">
+              ${item.tags.map(tag => `
+                <span class="item-tag" onclick="filterByTag('${tag}')">${tag}</span>
+              `).join('')}
+            </div>
+            <div class="item-actions">
+              <button class="edit-tags-btn" onclick="openEditModal('${item.id}')">✏️ Edit</button>
+              <button class="edit-tags-btn" onclick="openTagModal('${item.id}')">🏷️ Tags</button>
+              <button class="delete-btn" onclick="deleteItem('${item.id}')">🗑️ Delete</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Open detail modal to view full text
+    function openDetailModal(id) {
+      const item = items.find(i => i.id === id);
+      if (!item) return;
+
+      currentEditingItem = item;
+
+      document.getElementById('detailTitle').textContent = item.title;
+      document.getElementById('detailImage').src = item.image;
+      document.getElementById('detailImage').alt = item.title;
+      document.getElementById('detailText').textContent = item.text || 'No description';
+      
+      const detailTags = document.getElementById('detailTags');
+      detailTags.innerHTML = item.tags.map(tag => `
+        <span class="detail-tag">${tag}</span>
+      `).join('');
+
+      document.getElementById('detailModal').classList.add('active');
+    }
+
+    // Close detail modal
+    function closeDetailModal() {
+      document.getElementById('detailModal').classList.remove('active');
+    }
+
+    // Open edit modal
+    function openEditModal(id) {
+      const item = items.find(i => i.id === id);
+      if (!item) return;
+
+      currentEditingItem = item;
+
+      document.getElementById('editImagePreview').src = item.image;
+      document.getElementById('editTitleInput').value = item.title;
+      document.getElementById('editTextInput').value = item.text || '';
+
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    // Open edit from detail modal
+    function openEditFromDetail() {
+      closeDetailModal();
+      if (currentEditingItem) {
+        openEditModal(currentEditingItem.id);
+      }
+    }
+
+    // Close edit modal
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('active');
+      document.getElementById('editImageInput').value = '';
+    }
+
+    // Handle edit image change
+    let editImageFile = null;
+    document.getElementById('editImageInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        editImageFile = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          document.getElementById('editImagePreview').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Save edit changes
+    async function saveEdit() {
+      if (!currentEditingItem) return;
+
+      const item = items.find(i => i.id === currentEditingItem.id);
+      if (!item) return;
+
+      setSyncStatus('Saving...');
+
+      try {
+        item.title = document.getElementById('editTitleInput').value || 'Untitled';
+        item.text = document.getElementById('editTextInput').value;
+        
+        // Check if image was changed
+        if (editImageFile) {
+          const imageURL = await uploadImageToStorage(editImageFile, item.id);
+          item.image = imageURL;
+          editImageFile = null;
+        }
+
+        await saveItemToFirestore(item);
+        renderGallery();
+        closeEditModal();
+        showToast('Changes saved successfully!');
+      } catch (error) {
+        console.error('Save edit error:', error);
+        showToast('Failed to save changes', true);
+      }
+    }
+
+    // Update title
+    async function updateTitle(id, newTitle) {
+      const item = items.find(i => i.id === id);
+      if (item) {
+        item.title = newTitle;
+        await saveItemToFirestore(item);
+      }
+    }
+
+    // Delete item
+    async function deleteItem(id) {
+      if (!confirm('Are you sure you want to delete this entry?')) return;
+      
+      try {
+        await deleteImageFromStorage(id);
+        await deleteItemFromFirestore(id);
+        items = items.filter(i => i.id !== id);
+        renderTags();
+        renderGallery();
+        showToast('Entry deleted');
+      } catch (error) {
+        console.error('Delete error:', error);
+        showToast('Failed to delete entry', true);
+      }
+    }
+
+    // Open tag modal
+    function openTagModal(id) {
+      currentEditingItem = items.find(i => i.id === id);
+      if (!currentEditingItem) return;
+
+      modalTags.innerHTML = tags.map(tag => `
+        <div class="modal-tag ${currentEditingItem.tags.includes(tag) ? 'selected' : ''}" 
+             onclick="toggleModalTag(this, '${tag}')">
+          ${tag}
+        </div>
+      `).join('');
+
+      if (tags.length === 0) {
+        modalTags.innerHTML = '<p style="color: rgba(255,255,255,0.5)">No tags created yet. Create tags above first!</p>';
+      }
+
+      tagModal.classList.add('active');
+    }
+
+    // Toggle tag selection in modal
+    function toggleModalTag(el, tag) {
+      el.classList.toggle('selected');
+    }
+
+    // Save tags from modal
+    async function saveTags() {
+      if (!currentEditingItem) return;
+
+      const selectedTags = Array.from(modalTags.querySelectorAll('.modal-tag.selected'))
+        .map(el => el.textContent.trim());
+
+      currentEditingItem.tags = selectedTags;
+      await saveItemToFirestore(currentEditingItem);
+      renderTags();
+      renderGallery();
+      closeModal();
+      showToast('Tags updated!');
+    }
+
+    // Close modal
+    function closeModal() {
+      tagModal.classList.remove('active');
+      currentEditingItem = null;
+    }
+
+    // Close modals on outside click
+    tagModal.addEventListener('click', (e) => {
+      if (e.target === tagModal) closeModal();
+    });
+
+    document.getElementById('detailModal').addEventListener('click', (e) => {
+      if (e.target.id === 'detailModal') closeDetailModal();
+    });
+
+    document.getElementById('editModal').addEventListener('click', (e) => {
+      if (e.target.id === 'editModal') closeEditModal();
+    });
+
+    // Copy share link
+    function copyShareLink() {
+      if (!currentUser) return;
+      const shareUrl = `${window.location.origin}${window.location.pathname}?view=${currentUser.uid}`;
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        showToast('Share link copied!');
+      }).catch(() => {
+        showToast('Failed to copy link', true);
+      });
+    }
+
+    // Export gallery as JSON
+    function exportGallery() {
+      const data = {
+        version: 1,
+        exportDate: new Date().toISOString(),
+        tags: tags,
+        items: items
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `strahd-gallery-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      showToast('Backup exported!');
+    }
+
+    // Import gallery from JSON
+    document.getElementById('importInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file || !currentUser) return;
+
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const data = JSON.parse(event.target.result);
+          
+          if (!data.items || !Array.isArray(data.items)) {
+            throw new Error('Invalid format');
+          }
+
+          setSyncStatus('Importing...');
+
+          // Merge tags
+          if (data.tags && Array.isArray(data.tags)) {
+            data.tags.forEach(tag => {
+              if (!tags.includes(tag)) {
+                tags.push(tag);
+              }
+            });
+            await saveTagsToFirestore();
+          }
+
+          // Import items
+          for (const item of data.items) {
+            const existingItem = items.find(i => i.id === item.id);
+            if (!existingItem) {
+              item.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+              await saveItemToFirestore(item);
+              items.push(item);
+            }
+          }
+
+          renderTags();
+          renderGallery();
+          showToast(`Imported ${data.items.length} items!`);
+        } catch (err) {
+          console.error('Import error:', err);
+          showToast('Failed to import: Invalid file format', true);
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+
+    // Check for view mode (viewing someone else's gallery)
+    async function checkViewMode() {
+      const params = new URLSearchParams(window.location.search);
+      const viewUserId = params.get('view');
+      
+      if (viewUserId && viewUserId !== currentUser?.uid) {
+        // Load another user's public gallery
+        loadingOverlay.style.display = 'flex';
+        try {
+          const tagsDoc = await db.collection('users').doc(viewUserId).collection('data').doc('tags').get();
+          if (tagsDoc.exists) {
+            tags = tagsDoc.data().tags || [];
+          }
+
+          const itemsSnapshot = await db.collection('users').doc(viewUserId).collection('items').get();
+          items = [];
+          itemsSnapshot.forEach(doc => {
+            items.push({ id: doc.id, ...doc.data() });
+          });
+
+          // Hide controls for view mode
+          document.querySelector('.controls').style.display = 'none';
+          authSection.innerHTML = '<p class="auth-message">Viewing shared gallery (read-only)</p>';
+          authSection.style.display = 'flex';
+          authSection.classList.remove('logged-out');
+          mainContent.classList.add('visible');
+          
+          renderTags();
+          renderGallery();
+        } catch (error) {
+          console.error('View mode error:', error);
+          showToast('Failed to load shared gallery', true);
+        }
+        loadingOverlay.style.display = 'none';
+      }
+    }
+
+    // Initialize
+    checkViewMode();
+  </script>
+</body>
+</html>
