@@ -1234,8 +1234,12 @@
             <input type="text" id="titleInput" placeholder="Enter image title...">
           </div>
           <div>
-            <label for="textInput">Associated Text</label>
-            <textarea id="textInput" placeholder="Enter text to show on hover..."></textarea>
+            <label for="hoverTextInput">Hover Text</label>
+            <input type="text" id="hoverTextInput" placeholder="Short preview shown on hover...">
+          </div>
+          <div>
+            <label for="textInput">Full Description</label>
+            <textarea id="textInput" placeholder="Detailed text shown when clicked..."></textarea>
           </div>
           <div>
             <label for="entryTagsInput">Tags</label>
@@ -1365,8 +1369,12 @@
           <input type="text" id="editTitleInput" placeholder="Enter title...">
         </div>
         <div>
-          <label for="editTextInput">Associated Text</label>
-          <textarea id="editTextInput" rows="6" placeholder="Enter description text..."></textarea>
+          <label for="editHoverTextInput">Hover Text</label>
+          <input type="text" id="editHoverTextInput" placeholder="Short preview shown on hover...">
+        </div>
+        <div>
+          <label for="editTextInput">Full Description</label>
+          <textarea id="editTextInput" rows="6" placeholder="Detailed text shown when clicked..."></textarea>
         </div>
       </div>
       <div class="modal-actions">
@@ -1649,6 +1657,7 @@
           id: itemId,
           image: imageURL,
           title: titleInput.value || 'Untitled',
+          hoverText: document.getElementById('hoverTextInput').value || '',
           text: textInput.value || '',
           tags: entryTags,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1665,6 +1674,7 @@
         selectedImageFile = null;
         imageInput.value = '';
         titleInput.value = '';
+        document.getElementById('hoverTextInput').value = '';
         textInput.value = '';
         document.getElementById('entryTagsInput').value = '';
         document.getElementById('selectedTagsPreview').innerHTML = '';
@@ -1890,7 +1900,7 @@
           <div class="image-container" onclick="openDetailModal('${item.id}')">
             <img src="${item.image}" alt="${item.title}">
             <div class="overlay" id="overlay-${item.id}">
-              <p>${item.text ? (item.text.length > 150 ? item.text.substring(0, 150) + '... (click to read more)' : item.text) : 'No description'}</p>
+              <p>${item.hoverText || item.text || 'No description'}</p>
             </div>
           </div>
           <div class="item-footer">
@@ -1950,6 +1960,7 @@
 
       document.getElementById('editImagePreview').src = item.image;
       document.getElementById('editTitleInput').value = item.title;
+      document.getElementById('editHoverTextInput').value = item.hoverText || '';
       document.getElementById('editTextInput').value = item.text || '';
 
       document.getElementById('editModal').classList.add('active');
@@ -1994,6 +2005,7 @@
 
       try {
         item.title = document.getElementById('editTitleInput').value || 'Untitled';
+        item.hoverText = document.getElementById('editHoverTextInput').value;
         item.text = document.getElementById('editTextInput').value;
         
         // Check if image was changed
