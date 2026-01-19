@@ -675,16 +675,23 @@
       transition: all 0.3s;
       font-family: 'Cinzel', serif;
       letter-spacing: 1px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .gallery-item .title-input:hover {
       border-color: #3d1515;
+      white-space: normal;
+      word-wrap: break-word;
     }
 
     .gallery-item .title-input:focus {
       outline: none;
       border-color: #8b0000;
       background: rgba(139, 0, 0, 0.1);
+      white-space: normal;
+      word-wrap: break-word;
     }
 
     .gallery-item .item-tags {
@@ -1389,7 +1396,7 @@
         </div>
         <div class="quick-filters">
           <span class="quick-filter-label">Quick Filters:</span>
-          <button class="quick-filter-btn" onclick="quickFilter('Character')">👤 Character</button>
+          <button class="quick-filter-btn" onclick="quickFilter('The Experienced')">🎭 The Experienced</button>
           <button class="quick-filter-btn" onclick="quickFilter('Location')">📍 Location</button>
           <button class="quick-filter-btn" onclick="quickFilter('Item')">⚔️ Item</button>
           <button class="quick-filter-btn" onclick="quickFilter('NPC')">🧙 NPC</button>
@@ -1523,7 +1530,7 @@
     const ADMIN_UID = null; // Will be set to allow anyone signed in to edit for now
     
     // Default tags that should always exist
-    const defaultTags = ['Character', 'Location', 'Item', 'NPC', 'Monster'];
+    const defaultTags = ['The Experienced', 'Location', 'Item', 'NPC', 'Monster'];
 
     // DOM Elements
     const imageInput = document.getElementById('imageInput');
