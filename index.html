@@ -1203,6 +1203,7 @@
           <span class="user-name" id="userName"></span>
           <span class="sync-status" id="syncStatus"></span>
         </div>
+        <button class="btn-signout" onclick="migrateOldData()" id="migrateBtn" style="background: rgba(201, 162, 39, 0.3); border-color: #c9a227;">📦 Migrate Old Data</button>
         <button class="btn-signout" onclick="signOutUser()">Sign Out</button>
       </div>
 
@@ -1624,6 +1625,68 @@
       toast.className = 'toast' + (isError ? ' error' : '');
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Migrate old user data to public collection
+    async function migrateOldData() {
+      if (!currentUser) {
+        showToast('Please sign in first', true);
+        return;
+      }
+
+      if (!confirm('This will copy your old entries to the public database. Continue?')) {
+        return;
+      }
+
+      setSyncStatus('Migrating...');
+      
+      try {
+        // Load old tags from user collection
+        const oldTagsDoc = await db.collection('users').doc(currentUser.uid).collection('data').doc('tags').get();
+        if (oldTagsDoc.exists) {
+          const oldTags = oldTagsDoc.data().tags || [];
+          oldTags.forEach(tag => {
+            if (!tags.includes(tag)) {
+              tags.push(tag);
+            }
+          });
+          await saveTagsToFirestore();
+        }
+
+        // Load old items from user collection
+        const oldItemsSnapshot = await db.collection('users').doc(currentUser.uid).collection('items').get();
+        let migratedCount = 0;
+        
+        for (const doc of oldItemsSnapshot.docs) {
+          const oldItem = { id: doc.id, ...doc.data() };
+          
+          // Check if item already exists in public collection
+          const existingItem = items.find(i => i.id === oldItem.id);
+          if (!existingItem) {
+            await db.collection('public').doc('data').collection('items').doc(oldItem.id).set(oldItem);
+            items.push(oldItem);
+            migratedCount++;
+          }
+        }
+
+        renderTags();
+        renderGallery();
+        setSyncStatus('');
+        
+        if (migratedCount > 0) {
+          showToast(`Migrated ${migratedCount} entries successfully!`);
+        } else {
+          showToast('No new entries to migrate');
+        }
+        
+        // Hide migrate button after successful migration
+        document.getElementById('migrateBtn').style.display = 'none';
+        
+      } catch (error) {
+        console.error('Migration error:', error);
+        setSyncStatus('Error', true);
+        showToast('Migration failed: ' + error.message, true);
+      }
     }
 
     // Image input handler
