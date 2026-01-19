@@ -61,19 +61,14 @@
     /* Auth Section */
     .auth-section {
       display: flex;
-      justify-content: center;
+      justify-content: flex-end;
       align-items: center;
       gap: 15px;
       margin-bottom: 20px;
-      padding: 15px;
+      padding: 10px 15px;
       background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
-      border: 2px solid #3d1515;
+      border: 1px solid #3d1515;
       border-radius: 4px;
-    }
-
-    .auth-section.logged-out {
-      flex-direction: column;
-      padding: 40px;
     }
 
     .auth-message {
@@ -104,26 +99,25 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 12px 24px;
+      padding: 8px 16px;
       background: linear-gradient(180deg, #2d0a0a 0%, #1a0505 100%);
-      border: 2px solid #8b0000;
+      border: 1px solid #5a1515;
       border-radius: 4px;
       color: #d4c4a8;
-      font-family: 'Cinzel', serif;
-      font-size: 1rem;
+      font-family: 'Crimson Text', serif;
+      font-size: 0.9rem;
       cursor: pointer;
       transition: all 0.3s;
     }
 
     .btn-google:hover {
       background: linear-gradient(180deg, #4a0000 0%, #2d0a0a 100%);
-      box-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
-      transform: translateY(-2px);
+      border-color: #8b0000;
     }
 
     .btn-google img {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
     }
 
     .btn-signout {
@@ -1191,12 +1185,11 @@
   <div class="container">
     <h1>Curse of Strahd Database</h1>
 
-    <!-- Auth Section -->
-    <div class="auth-section logged-out" id="authSection">
-      <p class="auth-message">Sign in to access your gallery</p>
+    <!-- Auth Section (small sign-in button for editors) -->
+    <div class="auth-section" id="authSection">
       <button class="btn-google" onclick="signInWithGoogle()">
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
-        Sign in with Google
+        Sign in to Edit
       </button>
     </div>
 
@@ -1415,6 +1408,11 @@
     let currentUser = null;
     let searchQuery = '';
     let currentSort = 'date-desc';
+    let isAdmin = false;
+    
+    // Your Google account user ID - set this after first sign-in
+    // You'll see it logged in console when you sign in
+    const ADMIN_UID = null; // Will be set to allow anyone signed in to edit for now
     
     // Default tags that should always exist
     const defaultTags = ['Character', 'Location', 'Item', 'NPC', 'Monster'];
@@ -1440,23 +1438,49 @@
 
     // Auth State Listener
     auth.onAuthStateChanged(async (user) => {
+      currentUser = user;
+      
       if (user) {
-        currentUser = user;
+        // Log UID so you can set ADMIN_UID
+        console.log('Signed in as:', user.uid);
+        
+        // Check if user is admin (if ADMIN_UID is set, only that user can edit; otherwise anyone signed in can edit)
+        isAdmin = ADMIN_UID ? (user.uid === ADMIN_UID) : true;
+        
         document.getElementById('userAvatar').src = user.photoURL || '';
         document.getElementById('userName').textContent = user.displayName || user.email;
+        document.getElementById('userBar').style.display = 'flex';
         authSection.style.display = 'none';
-        mainContent.classList.add('visible');
-        await loadDataFromFirestore();
       } else {
-        currentUser = null;
+        isAdmin = false;
+        document.getElementById('userBar').style.display = 'none';
         authSection.style.display = 'flex';
-        authSection.classList.add('logged-out');
-        mainContent.classList.remove('visible');
-        items = [];
-        tags = [];
+        authSection.classList.remove('logged-out');
       }
+      
+      // Always show main content and load data (public viewing)
+      mainContent.classList.add('visible');
+      await loadDataFromFirestore();
+      updateUIForPermissions();
       loadingOverlay.style.display = 'none';
     });
+
+    // Update UI based on edit permissions
+    function updateUIForPermissions() {
+      const controls = document.querySelector('.controls');
+      const editButtons = document.querySelectorAll('.edit-tags-btn, .delete-btn');
+      const titleInputs = document.querySelectorAll('.gallery-item .title-input');
+      
+      if (isAdmin) {
+        if (controls) controls.style.display = 'block';
+        editButtons.forEach(btn => btn.style.display = 'inline-block');
+        titleInputs.forEach(input => input.disabled = false);
+      } else {
+        if (controls) controls.style.display = 'none';
+        editButtons.forEach(btn => btn.style.display = 'none');
+        titleInputs.forEach(input => input.disabled = true);
+      }
+    }
 
     // Sign in with Google
     async function signInWithGoogle() {
@@ -1482,19 +1506,17 @@
       }
     }
 
-    // Load data from Firestore
+    // Load data from Firestore (public collection)
     async function loadDataFromFirestore() {
-      if (!currentUser) return;
-      
       setSyncStatus('Loading...');
       try {
-        // Load tags
-        const tagsDoc = await db.collection('users').doc(currentUser.uid).collection('data').doc('tags').get();
+        // Load tags from public collection
+        const tagsDoc = await db.collection('public').doc('tags').get();
         if (tagsDoc.exists) {
           tags = tagsDoc.data().tags || [];
         }
         
-        // Ensure default tags exist
+        // Ensure default tags exist (only save if admin)
         let tagsUpdated = false;
         defaultTags.forEach(tag => {
           if (!tags.includes(tag)) {
@@ -1502,12 +1524,12 @@
             tagsUpdated = true;
           }
         });
-        if (tagsUpdated) {
+        if (tagsUpdated && isAdmin) {
           await saveTagsToFirestore();
         }
 
-        // Load items
-        const itemsSnapshot = await db.collection('users').doc(currentUser.uid).collection('items').get();
+        // Load items from public collection
+        const itemsSnapshot = await db.collection('public').doc('data').collection('items').get();
         items = [];
         itemsSnapshot.forEach(doc => {
           items.push({ id: doc.id, ...doc.data() });
@@ -1523,13 +1545,13 @@
       }
     }
 
-    // Save tags to Firestore
+    // Save tags to Firestore (public collection)
     async function saveTagsToFirestore() {
-      if (!currentUser) return;
+      if (!isAdmin) return;
       
       setSyncStatus('Saving...');
       try {
-        await db.collection('users').doc(currentUser.uid).collection('data').doc('tags').set({ tags });
+        await db.collection('public').doc('tags').set({ tags });
         setSyncStatus('');
       } catch (error) {
         console.error('Save tags error:', error);
@@ -1537,13 +1559,13 @@
       }
     }
 
-    // Save item to Firestore
+    // Save item to Firestore (public collection)
     async function saveItemToFirestore(item) {
-      if (!currentUser) return;
+      if (!isAdmin) return;
       
       setSyncStatus('Saving...');
       try {
-        await db.collection('users').doc(currentUser.uid).collection('items').doc(item.id).set(item);
+        await db.collection('public').doc('data').collection('items').doc(item.id).set(item);
         setSyncStatus('');
       } catch (error) {
         console.error('Save item error:', error);
@@ -1552,13 +1574,13 @@
       }
     }
 
-    // Delete item from Firestore
+    // Delete item from Firestore (public collection)
     async function deleteItemFromFirestore(itemId) {
-      if (!currentUser) return;
+      if (!isAdmin) return;
       
       setSyncStatus('Deleting...');
       try {
-        await db.collection('users').doc(currentUser.uid).collection('items').doc(itemId).delete();
+        await db.collection('public').doc('data').collection('items').doc(itemId).delete();
         setSyncStatus('');
       } catch (error) {
         console.error('Delete error:', error);
@@ -1567,11 +1589,11 @@
       }
     }
 
-    // Upload image to Firebase Storage
+    // Upload image to Firebase Storage (public folder)
     async function uploadImageToStorage(file, itemId) {
-      if (!currentUser) return null;
+      if (!isAdmin) return null;
       
-      const storageRef = storage.ref(`users/${currentUser.uid}/images/${itemId}`);
+      const storageRef = storage.ref(`public/images/${itemId}`);
       const snapshot = await storageRef.put(file);
       const downloadURL = await snapshot.ref.getDownloadURL();
       return downloadURL;
@@ -1579,13 +1601,12 @@
 
     // Delete image from Firebase Storage
     async function deleteImageFromStorage(itemId) {
-      if (!currentUser) return;
+      if (!isAdmin) return;
       
       try {
-        const storageRef = storage.ref(`users/${currentUser.uid}/images/${itemId}`);
+        const storageRef = storage.ref(`public/images/${itemId}`);
         await storageRef.delete();
       } catch (error) {
-        // Image might not exist, ignore error
         console.log('Image delete error (may not exist):', error);
       }
     }
@@ -1622,7 +1643,7 @@
 
     // Add item
     async function addItem() {
-      if (!selectedImageFile || !currentUser) return;
+      if (!selectedImageFile || !isAdmin) return;
 
       addBtn.disabled = true;
       setSyncStatus('Uploading...');
@@ -1924,6 +1945,9 @@
           </div>
         </div>
       `).join('');
+      
+      // Update edit buttons visibility based on permissions
+      updateUIForPermissions();
     }
 
     // Open detail modal to view full text
