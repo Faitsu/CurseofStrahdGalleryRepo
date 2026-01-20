@@ -1715,6 +1715,77 @@
       margin-left: 10px;
     }
 
+    /* DM Notes Section */
+    .dm-notes-section {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 2px dashed #c9a227;
+    }
+
+    .dm-notes-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .dm-notes-header h4 {
+      color: #c9a227;
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dm-notes-header h4::before {
+      content: '🔒';
+    }
+
+    .dm-notes-content {
+      background: rgba(201, 162, 39, 0.1);
+      border: 1px solid rgba(201, 162, 39, 0.3);
+      border-radius: 4px;
+      padding: 15px;
+      min-height: 60px;
+    }
+
+    .dm-notes-content.editing {
+      padding: 0;
+    }
+
+    .dm-notes-content textarea {
+      width: 100%;
+      min-height: 100px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(201, 162, 39, 0.3);
+      border-radius: 4px;
+      padding: 10px;
+      color: #d4c4a8;
+      font-family: 'Crimson Text', serif;
+      resize: vertical;
+    }
+
+    .dm-notes-content .markdown-content {
+      color: #d4c4a8;
+    }
+
+    .dm-notes-content .empty-notes {
+      color: rgba(201, 162, 39, 0.5);
+      font-style: italic;
+    }
+
+    .dm-notes-actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Quest DM Notes */
+    .quest-item .dm-notes-section {
+      margin-top: 15px;
+    }
+
     /* Search and Sort Section */
     .search-sort-section {
       background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
@@ -2126,6 +2197,21 @@
           <div class="markdown-content" id="detailText"></div>
         </div>
         <div class="detail-tags" id="detailTags"></div>
+        
+        <!-- DM Notes Section (only visible to DM) -->
+        <div class="dm-notes-section" id="detailDmNotesSection" style="display: none;">
+          <div class="dm-notes-header">
+            <h4>DM Notes</h4>
+            <button class="btn btn-secondary" id="detailDmNotesEditBtn" onclick="toggleDetailDmNotesEdit()">✏️ Edit</button>
+          </div>
+          <div class="dm-notes-content" id="detailDmNotesContent">
+            <div class="markdown-content" id="detailDmNotesView"></div>
+          </div>
+          <div class="dm-notes-actions" id="detailDmNotesActions" style="display: none;">
+            <button class="btn btn-secondary" onclick="cancelDetailDmNotesEdit()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveDetailDmNotes()">💾 Save Notes</button>
+          </div>
+        </div>
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeDetailModal()">Close</button>
@@ -2180,6 +2266,22 @@
         <button class="modal-close" onclick="closeDocumentModal()">&times;</button>
       </div>
       <div class="document-body markdown-content" id="documentModalBody"></div>
+      
+      <!-- DM Notes Section (only visible to DM) -->
+      <div class="dm-notes-section" id="docDmNotesSection" style="display: none;">
+        <div class="dm-notes-header">
+          <h4>DM Notes</h4>
+          <button class="btn btn-secondary" id="docDmNotesEditBtn" onclick="toggleDocDmNotesEdit()">✏️ Edit</button>
+        </div>
+        <div class="dm-notes-content" id="docDmNotesContent">
+          <div class="markdown-content" id="docDmNotesView"></div>
+        </div>
+        <div class="dm-notes-actions" id="docDmNotesActions" style="display: none;">
+          <button class="btn btn-secondary" onclick="cancelDocDmNotesEdit()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveDocDmNotes()">💾 Save Notes</button>
+        </div>
+      </div>
+      
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeDocumentModal()">Close</button>
         <button class="btn btn-primary dm-only-btn" onclick="editDocument()" style="display:none;">✏️ Edit</button>
@@ -2402,6 +2504,10 @@
       folderActionBtns.forEach(el => { if (el) el.style.display = isDM ? 'flex' : 'none'; });
       docAddSections.forEach(el => { if (el) el.style.display = isDM ? 'flex' : 'none'; });
       dmOnlyBtns.forEach(btn => { if (btn) btn.style.display = isDM ? 'inline-block' : 'none'; });
+      
+      // DM Notes sections (only visible to DM)
+      const dmNotesSections = document.querySelectorAll('.dm-notes-section');
+      dmNotesSections.forEach(el => { if (el) el.style.display = isDM ? 'block' : 'none'; });
     }
 
     // Sign in with Google
@@ -3009,7 +3115,22 @@
         <span class="detail-tag">${tag}</span>
       `).join('');
 
+      // Update DM notes view
+      const dmNotesView = document.getElementById('detailDmNotesView');
+      if (dmNotesView) {
+        dmNotesView.innerHTML = item.dmNotes 
+          ? marked.parse(item.dmNotes)
+          : '<span class="empty-notes">No DM notes yet.</span>';
+      }
+      
+      // Reset edit state
+      const notesContent = document.getElementById('detailDmNotesContent');
+      const notesActions = document.getElementById('detailDmNotesActions');
+      if (notesContent) notesContent.classList.remove('editing');
+      if (notesActions) notesActions.style.display = 'none';
+
       document.getElementById('detailModal').classList.add('active');
+      updateUIForPermissions();
     }
 
     // Close detail modal
@@ -3407,6 +3528,22 @@
         const progressPercent = hasProgress ? Math.min(100, (quest.current / quest.total) * 100) : 0;
         const isComplete = hasProgress && quest.current >= quest.total;
         
+        const dmNotesHtml = `
+          <div class="dm-notes-section quest-dm-notes" data-quest-id="${quest.id}" style="display: none;">
+            <div class="dm-notes-header">
+              <h4>DM Notes</h4>
+              <button class="btn btn-secondary" onclick="toggleQuestDmNotesEdit('${quest.id}')">✏️ Edit</button>
+            </div>
+            <div class="dm-notes-content" id="questDmNotes-${quest.id}">
+              <div class="markdown-content">${quest.dmNotes ? marked.parse(quest.dmNotes) : '<span class="empty-notes">No DM notes yet.</span>'}</div>
+            </div>
+            <div class="dm-notes-actions" id="questDmNotesActions-${quest.id}" style="display: none;">
+              <button class="btn btn-secondary" onclick="cancelQuestDmNotesEdit('${quest.id}')">Cancel</button>
+              <button class="btn btn-primary" onclick="saveQuestDmNotes('${quest.id}')">💾 Save</button>
+            </div>
+          </div>
+        `;
+        
         if (isTracker) {
           // Tracker: just title and progress bar
           return `
@@ -3432,6 +3569,7 @@
                   </div>
                 </div>
               ` : ''}
+              ${dmNotesHtml}
             </div>
           `;
         } else {
@@ -3460,6 +3598,7 @@
                   </div>
                 </div>
               ` : ''}
+              ${dmNotesHtml}
             </div>
           `;
         }
@@ -3880,6 +4019,20 @@
         ? marked.parse(currentEditingDocument.content)
         : '<p class="empty-text">This document is empty.</p>';
       
+      // Update DM notes view
+      const dmNotesView = document.getElementById('docDmNotesView');
+      if (dmNotesView) {
+        dmNotesView.innerHTML = currentEditingDocument.dmNotes 
+          ? marked.parse(currentEditingDocument.dmNotes)
+          : '<span class="empty-notes">No DM notes yet.</span>';
+      }
+      
+      // Reset edit state
+      const notesContent = document.getElementById('docDmNotesContent');
+      const notesActions = document.getElementById('docDmNotesActions');
+      if (notesContent) notesContent.classList.remove('editing');
+      if (notesActions) notesActions.style.display = 'none';
+      
       document.getElementById('documentModal').classList.add('active');
       updateUIForPermissions();
     }
@@ -3972,6 +4125,166 @@
     document.getElementById('documentEditModal').addEventListener('click', (e) => {
       if (e.target.id === 'documentEditModal') closeDocumentEditModal();
     });
+
+    // ============== DM NOTES FUNCTIONS ==============
+    
+    // Gallery Item DM Notes
+    function toggleDetailDmNotesEdit() {
+      if (!isDM || !currentEditingItem) return;
+      
+      const content = document.getElementById('detailDmNotesContent');
+      const actions = document.getElementById('detailDmNotesActions');
+      const view = document.getElementById('detailDmNotesView');
+      
+      content.classList.add('editing');
+      content.innerHTML = `<textarea id="detailDmNotesInput" placeholder="Add DM notes (supports Markdown)...">${currentEditingItem.dmNotes || ''}</textarea>`;
+      actions.style.display = 'flex';
+    }
+    
+    function cancelDetailDmNotesEdit() {
+      const content = document.getElementById('detailDmNotesContent');
+      const actions = document.getElementById('detailDmNotesActions');
+      const view = document.getElementById('detailDmNotesView');
+      
+      content.classList.remove('editing');
+      content.innerHTML = `<div class="markdown-content" id="detailDmNotesView">${currentEditingItem.dmNotes ? marked.parse(currentEditingItem.dmNotes) : '<span class="empty-notes">No DM notes yet.</span>'}</div>`;
+      actions.style.display = 'none';
+    }
+    
+    async function saveDetailDmNotes() {
+      if (!isDM || !currentEditingItem) return;
+      
+      const notesInput = document.getElementById('detailDmNotesInput');
+      currentEditingItem.dmNotes = notesInput ? notesInput.value : '';
+      
+      setSyncStatus('Saving...');
+      try {
+        await saveItemToFirestore(currentEditingItem);
+        
+        // Update local items array
+        const itemIndex = items.findIndex(i => i.id === currentEditingItem.id);
+        if (itemIndex !== -1) {
+          items[itemIndex] = {...currentEditingItem};
+        }
+        
+        cancelDetailDmNotesEdit();
+        setSyncStatus('');
+        showToast('DM notes saved!');
+      } catch (error) {
+        console.error('Save DM notes error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to save DM notes: ' + error.message, true);
+      }
+    }
+    
+    // Document DM Notes
+    function toggleDocDmNotesEdit() {
+      if (!isDM || !currentEditingDocument) return;
+      
+      const content = document.getElementById('docDmNotesContent');
+      const actions = document.getElementById('docDmNotesActions');
+      
+      content.classList.add('editing');
+      content.innerHTML = `<textarea id="docDmNotesInput" placeholder="Add DM notes (supports Markdown)...">${currentEditingDocument.dmNotes || ''}</textarea>`;
+      actions.style.display = 'flex';
+    }
+    
+    function cancelDocDmNotesEdit() {
+      const content = document.getElementById('docDmNotesContent');
+      const actions = document.getElementById('docDmNotesActions');
+      
+      content.classList.remove('editing');
+      content.innerHTML = `<div class="markdown-content" id="docDmNotesView">${currentEditingDocument.dmNotes ? marked.parse(currentEditingDocument.dmNotes) : '<span class="empty-notes">No DM notes yet.</span>'}</div>`;
+      actions.style.display = 'none';
+    }
+    
+    async function saveDocDmNotes() {
+      if (!isDM || !currentEditingDocument || !currentEditingFolder) return;
+      
+      const notesInput = document.getElementById('docDmNotesInput');
+      currentEditingDocument.dmNotes = notesInput ? notesInput.value : '';
+      
+      // Update the document in the folder's documents array
+      const docIndex = currentEditingFolder.documents.findIndex(d => d.id === currentEditingDocument.id);
+      if (docIndex !== -1) {
+        currentEditingFolder.documents[docIndex] = currentEditingDocument;
+      }
+      
+      setSyncStatus('Saving...');
+      try {
+        await db.collection('public').doc('data').collection('folders').doc(currentEditingFolder.id).set(currentEditingFolder);
+        
+        // Update local folders array
+        const folderIndex = folders.findIndex(f => f.id === currentEditingFolder.id);
+        if (folderIndex !== -1) {
+          folders[folderIndex] = currentEditingFolder;
+        }
+        
+        cancelDocDmNotesEdit();
+        setSyncStatus('');
+        showToast('DM notes saved!');
+      } catch (error) {
+        console.error('Save doc DM notes error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to save DM notes: ' + error.message, true);
+      }
+    }
+    
+    // Quest DM Notes
+    function toggleQuestDmNotesEdit(questId) {
+      if (!isDM) return;
+      
+      const quest = quests.find(q => q.id === questId);
+      if (!quest) return;
+      
+      const content = document.getElementById(`questDmNotes-${questId}`);
+      const actions = document.getElementById(`questDmNotesActions-${questId}`);
+      
+      content.classList.add('editing');
+      content.innerHTML = `<textarea id="questDmNotesInput-${questId}" placeholder="Add DM notes (supports Markdown)...">${quest.dmNotes || ''}</textarea>`;
+      actions.style.display = 'flex';
+    }
+    
+    function cancelQuestDmNotesEdit(questId) {
+      const quest = quests.find(q => q.id === questId);
+      if (!quest) return;
+      
+      const content = document.getElementById(`questDmNotes-${questId}`);
+      const actions = document.getElementById(`questDmNotesActions-${questId}`);
+      
+      content.classList.remove('editing');
+      content.innerHTML = `<div class="markdown-content">${quest.dmNotes ? marked.parse(quest.dmNotes) : '<span class="empty-notes">No DM notes yet.</span>'}</div>`;
+      actions.style.display = 'none';
+    }
+    
+    async function saveQuestDmNotes(questId) {
+      if (!isDM) return;
+      
+      const quest = quests.find(q => q.id === questId);
+      if (!quest) return;
+      
+      const notesInput = document.getElementById(`questDmNotesInput-${questId}`);
+      quest.dmNotes = notesInput ? notesInput.value : '';
+      
+      setSyncStatus('Saving...');
+      try {
+        await db.collection('public').doc('data').collection('quests').doc(questId).set(quest);
+        
+        // Update local quests array
+        const questIndex = quests.findIndex(q => q.id === questId);
+        if (questIndex !== -1) {
+          quests[questIndex] = {...quest};
+        }
+        
+        cancelQuestDmNotesEdit(questId);
+        setSyncStatus('');
+        showToast('DM notes saved!');
+      } catch (error) {
+        console.error('Save quest DM notes error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to save DM notes: ' + error.message, true);
+      }
+    }
   </script>
 </body>
 </html>
