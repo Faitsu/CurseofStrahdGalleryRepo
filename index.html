@@ -1560,16 +1560,26 @@
 
     .document-add-section {
       display: flex;
+      flex-direction: column;
       gap: 10px;
       margin-bottom: 15px;
       padding-bottom: 15px;
       border-bottom: 1px solid #3d1515;
-      flex-wrap: wrap;
     }
 
-    .document-add-section input {
-      flex: 1;
-      min-width: 200px;
+    .doc-add-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .doc-add-form input,
+    .doc-add-form textarea {
+      width: 100%;
+    }
+
+    .doc-add-form button {
+      align-self: flex-start;
     }
 
     .documents-list {
@@ -1994,6 +2004,7 @@
         <div class="dm-controls folder-add-section" id="folderAddControls" style="display: none;">
           <input type="text" id="newFolderInput" placeholder="New folder name...">
           <button class="btn btn-primary" onclick="addFolder()">📁 Create Folder</button>
+          <input type="text" id="newFolderParent" placeholder="Parent folder ID (optional)" style="display: none;">
         </div>
         
         <div class="folders-container" id="foldersContainer">
@@ -3404,6 +3415,13 @@
       setSyncStatus('Saving...');
       try {
         await db.collection('public').doc('data').collection('quests').doc(currentEditingQuest.id).set(currentEditingQuest);
+        
+        // Update local quests array
+        const questIndex = quests.findIndex(q => q.id === currentEditingQuest.id);
+        if (questIndex !== -1) {
+          quests[questIndex] = {...currentEditingQuest};
+        }
+        
         renderQuests();
         closeQuestEditModal();
         setSyncStatus('');
@@ -3411,7 +3429,7 @@
       } catch (error) {
         console.error('Save quest error:', error);
         setSyncStatus('Error', true);
-        showToast('Failed to save quest', true);
+        showToast('Failed to save quest: ' + error.message, true);
       }
     }
 
@@ -3451,11 +3469,14 @@
     }
 
     // ============== DOCUMENTS/FOLDERS FUNCTIONS ==============
-    function renderFolders() {
+    function renderFolders(parentId = null, level = 0) {
       const foldersContainer = document.getElementById('foldersContainer');
       const emptyText = document.getElementById('emptyFoldersText');
       
-      if (folders.length === 0) {
+      // Get root level folders
+      const rootFolders = folders.filter(f => !f.parentId);
+      
+      if (rootFolders.length === 0) {
         foldersContainer.innerHTML = '';
         emptyText.style.display = 'block';
         foldersContainer.appendChild(emptyText);
@@ -3463,29 +3484,41 @@
       }
       
       emptyText.style.display = 'none';
+      foldersContainer.innerHTML = rootFolders.map(folder => renderFolderHTML(folder, 0)).join('');
       
-      foldersContainer.innerHTML = folders.map(folder => `
-        <div class="folder" data-id="${folder.id}">
+      updateUIForPermissions();
+    }
+
+    function renderFolderHTML(folder, level) {
+      const subfolders = folders.filter(f => f.parentId === folder.id);
+      const indent = level * 20;
+      
+      return `
+        <div class="folder" data-id="${folder.id}" style="margin-left: ${indent}px;">
           <div class="folder-header" onclick="toggleFolder('${folder.id}')">
             <span class="folder-title">📁 ${folder.name}</span>
             <div class="folder-actions" style="display: none;" onclick="event.stopPropagation()">
-              <button class="btn btn-secondary" onclick="deleteFolder('${folder.id}')">🗑️</button>
+              <button class="btn btn-secondary" onclick="editFolderName('${folder.id}')" title="Rename">✏️</button>
+              <button class="btn btn-secondary" onclick="addSubfolder('${folder.id}')" title="Add Subfolder">📁+</button>
+              <button class="btn delete-btn" onclick="deleteFolder('${folder.id}')" title="Delete">🗑️</button>
             </div>
             <span class="folder-toggle">▶</span>
           </div>
           <div class="folder-content">
             <div class="document-add-section" style="display: none;">
-              <input type="text" placeholder="Document title..." id="newDocTitle-${folder.id}">
-              <button class="btn btn-primary" onclick="addDocument('${folder.id}')">+ Add Document</button>
+              <div class="doc-add-form">
+                <input type="text" placeholder="Document title..." id="newDocTitle-${folder.id}">
+                <textarea placeholder="Document content (supports Markdown)..." id="newDocContent-${folder.id}" rows="3"></textarea>
+                <button class="btn btn-primary" onclick="addDocument('${folder.id}')">+ Add Document</button>
+              </div>
             </div>
             <div class="documents-list" id="docList-${folder.id}">
               ${renderDocuments(folder)}
             </div>
+            ${subfolders.map(sf => renderFolderHTML(sf, level + 1)).join('')}
           </div>
         </div>
-      `).join('');
-      
-      updateUIForPermissions();
+      `;
     }
 
     function renderDocuments(folder) {
@@ -3503,10 +3536,10 @@
 
     function toggleFolder(id) {
       const folder = document.querySelector(`.folder[data-id="${id}"]`);
-      folder.classList.toggle('open');
+      if (folder) folder.classList.toggle('open');
     }
 
-    async function addFolder() {
+    async function addFolder(parentId = null) {
       if (!isDM) return;
       
       const name = document.getElementById('newFolderInput').value.trim();
@@ -3518,7 +3551,9 @@
       const newFolder = {
         id: Date.now().toString(),
         name,
+        parentId: parentId,
         documents: [],
+        subfolders: [],
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       
@@ -3533,42 +3568,112 @@
       } catch (error) {
         console.error('Add folder error:', error);
         setSyncStatus('Error', true);
-        showToast('Failed to create folder', true);
+        showToast('Failed to create folder: ' + error.message, true);
+      }
+    }
+
+    async function addSubfolder(parentId) {
+      if (!isDM) return;
+      
+      const name = prompt('Enter subfolder name:');
+      if (!name || !name.trim()) return;
+      
+      const newFolder = {
+        id: Date.now().toString(),
+        name: name.trim(),
+        parentId: parentId,
+        documents: [],
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      
+      setSyncStatus('Saving...');
+      try {
+        await db.collection('public').doc('data').collection('folders').doc(newFolder.id).set(newFolder);
+        folders.push(newFolder);
+        renderFolders();
+        setSyncStatus('');
+        showToast('Subfolder created!');
+      } catch (error) {
+        console.error('Add subfolder error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to create subfolder: ' + error.message, true);
+      }
+    }
+
+    async function editFolderName(folderId) {
+      if (!isDM) return;
+      
+      const folder = folders.find(f => f.id === folderId);
+      if (!folder) return;
+      
+      const newName = prompt('Enter new folder name:', folder.name);
+      if (!newName || !newName.trim() || newName.trim() === folder.name) return;
+      
+      folder.name = newName.trim();
+      
+      setSyncStatus('Saving...');
+      try {
+        await db.collection('public').doc('data').collection('folders').doc(folderId).set(folder);
+        renderFolders();
+        setSyncStatus('');
+        showToast('Folder renamed!');
+      } catch (error) {
+        console.error('Rename folder error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to rename folder: ' + error.message, true);
       }
     }
 
     async function deleteFolder(id) {
       if (!isDM || !confirm('Delete this folder and all its documents?')) return;
       
+      // Also delete any subfolders
+      const subfolders = folders.filter(f => f.parentId === id);
+      
       setSyncStatus('Deleting...');
       try {
+        // Delete subfolders first
+        for (const sf of subfolders) {
+          await db.collection('public').doc('data').collection('folders').doc(sf.id).delete();
+        }
+        // Delete main folder
         await db.collection('public').doc('data').collection('folders').doc(id).delete();
-        folders = folders.filter(f => f.id !== id);
+        
+        folders = folders.filter(f => f.id !== id && f.parentId !== id);
         renderFolders();
         setSyncStatus('');
         showToast('Folder deleted');
       } catch (error) {
         console.error('Delete folder error:', error);
         setSyncStatus('Error', true);
+        showToast('Failed to delete folder: ' + error.message, true);
       }
     }
 
     async function addDocument(folderId) {
       if (!isDM) return;
       
-      const title = document.getElementById(`newDocTitle-${folderId}`).value.trim();
+      const titleInput = document.getElementById(`newDocTitle-${folderId}`);
+      const contentInput = document.getElementById(`newDocContent-${folderId}`);
+      
+      const title = titleInput ? titleInput.value.trim() : '';
+      const content = contentInput ? contentInput.value : '';
+      
       if (!title) {
         showToast('Please enter a document title', true);
         return;
       }
       
       const folder = folders.find(f => f.id === folderId);
-      if (!folder) return;
+      if (!folder) {
+        showToast('Folder not found', true);
+        return;
+      }
       
       const newDoc = {
         id: Date.now().toString(),
         title,
-        content: ''
+        content
       };
       
       if (!folder.documents) folder.documents = [];
@@ -3578,25 +3683,29 @@
       try {
         await db.collection('public').doc('data').collection('folders').doc(folderId).set(folder);
         renderFolders();
-        document.getElementById(`newDocTitle-${folderId}`).value = '';
+        if (titleInput) titleInput.value = '';
+        if (contentInput) contentInput.value = '';
         setSyncStatus('');
         showToast('Document created!');
-        
-        // Open the document for editing
-        openDocumentModal(folderId, newDoc.id);
       } catch (error) {
         console.error('Add document error:', error);
         setSyncStatus('Error', true);
-        showToast('Failed to create document', true);
+        showToast('Failed to create document: ' + error.message, true);
       }
     }
 
     function openDocumentModal(folderId, docId) {
       currentEditingFolder = folders.find(f => f.id === folderId);
-      if (!currentEditingFolder) return;
+      if (!currentEditingFolder) {
+        showToast('Folder not found', true);
+        return;
+      }
       
-      currentEditingDocument = currentEditingFolder.documents.find(d => d.id === docId);
-      if (!currentEditingDocument) return;
+      currentEditingDocument = currentEditingFolder.documents ? currentEditingFolder.documents.find(d => d.id === docId) : null;
+      if (!currentEditingDocument) {
+        showToast('Document not found', true);
+        return;
+      }
       
       document.getElementById('documentModalTitle').textContent = currentEditingDocument.title;
       document.getElementById('documentModalBody').innerHTML = currentEditingDocument.content 
@@ -3609,8 +3718,6 @@
 
     function closeDocumentModal() {
       document.getElementById('documentModal').classList.remove('active');
-      currentEditingDocument = null;
-      currentEditingFolder = null;
     }
 
     function editDocument() {
@@ -3633,9 +3740,22 @@
       currentEditingDocument.title = document.getElementById('editDocTitleInput').value.trim();
       currentEditingDocument.content = document.getElementById('editDocContentInput').value;
       
+      // Update the document in the folder's documents array
+      const docIndex = currentEditingFolder.documents.findIndex(d => d.id === currentEditingDocument.id);
+      if (docIndex !== -1) {
+        currentEditingFolder.documents[docIndex] = currentEditingDocument;
+      }
+      
       setSyncStatus('Saving...');
       try {
         await db.collection('public').doc('data').collection('folders').doc(currentEditingFolder.id).set(currentEditingFolder);
+        
+        // Update local folders array
+        const folderIndex = folders.findIndex(f => f.id === currentEditingFolder.id);
+        if (folderIndex !== -1) {
+          folders[folderIndex] = currentEditingFolder;
+        }
+        
         renderFolders();
         closeDocumentEditModal();
         setSyncStatus('');
@@ -3643,7 +3763,7 @@
       } catch (error) {
         console.error('Save document error:', error);
         setSyncStatus('Error', true);
-        showToast('Failed to save document', true);
+        showToast('Failed to save document: ' + error.message, true);
       }
     }
 
@@ -3656,6 +3776,13 @@
       setSyncStatus('Deleting...');
       try {
         await db.collection('public').doc('data').collection('folders').doc(currentEditingFolder.id).set(currentEditingFolder);
+        
+        // Update local folders array
+        const folderIndex = folders.findIndex(f => f.id === currentEditingFolder.id);
+        if (folderIndex !== -1) {
+          folders[folderIndex] = currentEditingFolder;
+        }
+        
         renderFolders();
         closeDocumentModal();
         setSyncStatus('');
@@ -3663,6 +3790,7 @@
       } catch (error) {
         console.error('Delete document error:', error);
         setSyncStatus('Error', true);
+        showToast('Failed to delete document: ' + error.message, true);
       }
     }
 
