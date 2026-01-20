@@ -3117,52 +3117,55 @@
     }
 
     // Import gallery from JSON
-    document.getElementById('importInput').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file || !currentUser) return;
+    const importInput = document.getElementById('importInput');
+    if (importInput) {
+      importInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file || !currentUser) return;
 
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        try {
-          const data = JSON.parse(event.target.result);
-          
-          if (!data.items || !Array.isArray(data.items)) {
-            throw new Error('Invalid format');
-          }
-
-          setSyncStatus('Importing...');
-
-          // Merge tags
-          if (data.tags && Array.isArray(data.tags)) {
-            data.tags.forEach(tag => {
-              if (!tags.includes(tag)) {
-                tags.push(tag);
-              }
-            });
-            await saveTagsToFirestore();
-          }
-
-          // Import items
-          for (const item of data.items) {
-            const existingItem = items.find(i => i.id === item.id);
-            if (!existingItem) {
-              item.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
-              await saveItemToFirestore(item);
-              items.push(item);
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          try {
+            const data = JSON.parse(event.target.result);
+            
+            if (!data.items || !Array.isArray(data.items)) {
+              throw new Error('Invalid format');
             }
-          }
 
-          renderTags();
-          renderGallery();
-          showToast(`Imported ${data.items.length} items!`);
-        } catch (err) {
-          console.error('Import error:', err);
-          showToast('Failed to import: Invalid file format', true);
-        }
-      };
-      reader.readAsText(file);
-      e.target.value = '';
-    });
+            setSyncStatus('Importing...');
+
+            // Merge tags
+            if (data.tags && Array.isArray(data.tags)) {
+              data.tags.forEach(tag => {
+                if (!tags.includes(tag)) {
+                  tags.push(tag);
+                }
+              });
+              await saveTagsToFirestore();
+            }
+
+            // Import items
+            for (const item of data.items) {
+              const existingItem = items.find(i => i.id === item.id);
+              if (!existingItem) {
+                item.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+                await saveItemToFirestore(item);
+                items.push(item);
+              }
+            }
+
+            renderTags();
+            renderGallery();
+            showToast(`Imported ${data.items.length} items!`);
+          } catch (err) {
+            console.error('Import error:', err);
+            showToast('Failed to import: Invalid file format', true);
+          }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+      });
+    }
 
     // Check for view mode (viewing someone else's gallery)
     async function checkViewMode() {
@@ -3243,27 +3246,30 @@
     }
 
     // Map image upload handler
-    document.getElementById('mapImageInput').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file || !isDM) return;
+    const mapImageInput = document.getElementById('mapImageInput');
+    if (mapImageInput) {
+      mapImageInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file || !isDM) return;
 
-      setSyncStatus('Uploading map...');
-      try {
-        const storageRef = storage.ref(`public/map/barovia-map`);
-        const snapshot = await storageRef.put(file);
-        const downloadURL = await snapshot.ref.getDownloadURL();
-        
-        mapData.image = downloadURL;
-        await db.collection('public').doc('map').set(mapData);
-        renderMap();
-        setSyncStatus('');
-        showToast('Map uploaded successfully!');
-      } catch (error) {
-        console.error('Map upload error:', error);
-        setSyncStatus('Error', true);
-        showToast('Failed to upload map', true);
-      }
-    });
+        setSyncStatus('Uploading map...');
+        try {
+          const storageRef = storage.ref(`public/map/barovia-map`);
+          const snapshot = await storageRef.put(file);
+          const downloadURL = await snapshot.ref.getDownloadURL();
+          
+          mapData.image = downloadURL;
+          await db.collection('public').doc('map').set(mapData);
+          renderMap();
+          setSyncStatus('');
+          showToast('Map uploaded successfully!');
+        } catch (error) {
+          console.error('Map upload error:', error);
+          setSyncStatus('Error', true);
+          showToast('Failed to upload map: ' + error.message, true);
+        }
+      });
+    }
 
     async function saveMapDescription() {
       if (!isDM) return;
