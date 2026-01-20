@@ -1427,6 +1427,17 @@
       border: 1px solid #3d1515;
       border-radius: 4px;
       overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    }
+
+    .quest-item.dragging {
+      opacity: 0.5;
+      transform: scale(0.98);
+    }
+
+    .quest-item.drag-over {
+      border-color: #c9a227;
+      box-shadow: 0 0 10px rgba(201, 162, 39, 0.5);
     }
 
     .quest-item.completed {
@@ -1436,6 +1447,23 @@
 
     .quest-item.completed .quest-header-bar {
       background: rgba(42, 90, 42, 0.2);
+    }
+
+    .drag-handle {
+      cursor: grab;
+      padding: 0 8px;
+      color: #5a1515;
+      font-size: 1.2rem;
+      display: none;
+      user-select: none;
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .drag-handle:hover {
+      color: #c9a227;
     }
 
     .quest-header-bar {
@@ -1887,35 +1915,6 @@
     /* Quest DM Notes */
     .quest-item .dm-notes-section {
       margin-top: 15px;
-    }
-
-    /* Move Buttons */
-    .move-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      margin-right: 10px;
-    }
-
-    .btn-move {
-      padding: 2px 8px;
-      font-size: 0.7rem;
-      background: rgba(139, 0, 0, 0.3);
-      border: 1px solid #5a1515;
-      color: #c9a227;
-      cursor: pointer;
-      border-radius: 3px;
-      transition: all 0.2s;
-    }
-
-    .btn-move:hover:not(:disabled) {
-      background: rgba(139, 0, 0, 0.5);
-      border-color: #c9a227;
-    }
-
-    .btn-move:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
     }
 
     /* Folder Sort Controls */
@@ -2674,9 +2673,9 @@
       docAddSections.forEach(el => { if (el) el.style.display = isDM ? 'flex' : 'none'; });
       dmOnlyBtns.forEach(btn => { if (btn) btn.style.display = isDM ? 'inline-block' : 'none'; });
       
-      // Move buttons for quests (only visible to DM)
-      const moveBtns = document.querySelectorAll('.move-buttons');
-      moveBtns.forEach(el => { if (el) el.style.display = isDM ? 'flex' : 'none'; });
+      // Drag handles for quests (only visible to DM)
+      const dragHandles = document.querySelectorAll('.drag-handle');
+      dragHandles.forEach(el => { if (el) el.style.display = isDM ? 'block' : 'none'; });
       
       // DM Notes sections (only visible to DM)
       const dmNotesSections = document.querySelectorAll('.dm-notes-section');
@@ -3724,12 +3723,7 @@
           </div>
         `;
         
-        const moveButtons = !quest.completed ? `
-          <div class="move-buttons" style="display: none;">
-            <button class="btn btn-move" onclick="event.stopPropagation(); moveQuest('${quest.id}', 'up')" ${isFirst ? 'disabled' : ''} title="Move Up">▲</button>
-            <button class="btn btn-move" onclick="event.stopPropagation(); moveQuest('${quest.id}', 'down')" ${isLast ? 'disabled' : ''} title="Move Down">▼</button>
-          </div>
-        ` : '';
+        const dragHandle = !quest.completed ? `<span class="drag-handle" title="Drag to reorder">⋮⋮</span>` : '';
         
         const miniProgress = hasProgress ? `
           <div class="quest-mini-progress">
@@ -3778,9 +3772,9 @@
         }
         
         return `
-          <div class="quest-item ${isTracker ? 'tracker' : ''} ${quest.completed ? 'completed' : ''}" data-id="${quest.id}">
+          <div class="quest-item ${isTracker ? 'tracker' : ''} ${quest.completed ? 'completed' : ''}" data-id="${quest.id}" draggable="${!quest.completed}">
             <div class="quest-header-bar" onclick="toggleQuestExpand('${quest.id}')">
-              ${moveButtons}
+              ${dragHandle}
               <span class="quest-expand-icon">▶</span>
               <span class="quest-type-icon">${typeIcon}</span>
               <h3 class="quest-title">${quest.title}</h3>
@@ -3798,6 +3792,9 @@
           </div>
         `;
       }).join('');
+      
+      // Setup drag and drop after rendering
+      setupQuestDragAndDrop();
       
       updateUIForPermissions();
     }
@@ -3978,8 +3975,66 @@
       }
     }
 
-    // Move quest up or down in the list
-    async function moveQuest(questId, direction) {
+    // Drag and drop state
+    let draggedQuestId = null;
+
+    // Setup drag and drop for quests
+    function setupQuestDragAndDrop() {
+      if (!isDM) return;
+      
+      const questItems = document.querySelectorAll('.quest-item[draggable="true"]');
+      
+      questItems.forEach(item => {
+        // Drag start
+        item.addEventListener('dragstart', (e) => {
+          draggedQuestId = item.dataset.id;
+          item.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', item.dataset.id);
+        });
+        
+        // Drag end
+        item.addEventListener('dragend', () => {
+          item.classList.remove('dragging');
+          draggedQuestId = null;
+          // Remove all drag-over classes
+          document.querySelectorAll('.quest-item.drag-over').forEach(el => {
+            el.classList.remove('drag-over');
+          });
+        });
+        
+        // Drag over
+        item.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          
+          if (item.dataset.id !== draggedQuestId && !item.classList.contains('completed')) {
+            item.classList.add('drag-over');
+          }
+        });
+        
+        // Drag leave
+        item.addEventListener('dragleave', () => {
+          item.classList.remove('drag-over');
+        });
+        
+        // Drop
+        item.addEventListener('drop', async (e) => {
+          e.preventDefault();
+          item.classList.remove('drag-over');
+          
+          const draggedId = e.dataTransfer.getData('text/plain');
+          const targetId = item.dataset.id;
+          
+          if (draggedId && targetId && draggedId !== targetId) {
+            await reorderQuests(draggedId, targetId);
+          }
+        });
+      });
+    }
+
+    // Reorder quests after drag and drop
+    async function reorderQuests(draggedId, targetId) {
       if (!isDM) return;
       
       // Get non-completed quests sorted by order
@@ -3992,43 +4047,46 @@
           return (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0);
         });
       
-      const currentIndex = activeQuests.findIndex(q => q.id === questId);
-      if (currentIndex === -1) return;
+      const draggedIndex = activeQuests.findIndex(q => q.id === draggedId);
+      const targetIndex = activeQuests.findIndex(q => q.id === targetId);
       
-      const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-      if (targetIndex < 0 || targetIndex >= activeQuests.length) return;
+      if (draggedIndex === -1 || targetIndex === -1) return;
       
-      // Swap order values
-      const currentQuest = activeQuests[currentIndex];
-      const targetQuest = activeQuests[targetIndex];
+      // Remove dragged item and insert at target position
+      const [draggedQuest] = activeQuests.splice(draggedIndex, 1);
+      activeQuests.splice(targetIndex, 0, draggedQuest);
       
-      // Assign order values if they don't exist
-      if (currentQuest.order === undefined) currentQuest.order = currentIndex;
-      if (targetQuest.order === undefined) targetQuest.order = targetIndex;
-      
-      // Swap
-      const tempOrder = currentQuest.order;
-      currentQuest.order = targetQuest.order;
-      targetQuest.order = tempOrder;
+      // Reassign order values
+      const updates = [];
+      activeQuests.forEach((quest, index) => {
+        quest.order = index;
+        updates.push(quest);
+      });
       
       setSyncStatus('Saving...');
       try {
-        // Save both quests
-        await db.collection('public').doc('data').collection('quests').doc(currentQuest.id).set(currentQuest);
-        await db.collection('public').doc('data').collection('quests').doc(targetQuest.id).set(targetQuest);
+        // Save all updated quests
+        const batch = db.batch();
+        updates.forEach(quest => {
+          const ref = db.collection('public').doc('data').collection('quests').doc(quest.id);
+          batch.set(ref, quest);
+        });
+        await batch.commit();
         
         // Update local array
-        const currentLocalIndex = quests.findIndex(q => q.id === currentQuest.id);
-        const targetLocalIndex = quests.findIndex(q => q.id === targetQuest.id);
-        if (currentLocalIndex !== -1) quests[currentLocalIndex] = {...currentQuest};
-        if (targetLocalIndex !== -1) quests[targetLocalIndex] = {...targetQuest};
+        updates.forEach(quest => {
+          const localIndex = quests.findIndex(q => q.id === quest.id);
+          if (localIndex !== -1) {
+            quests[localIndex] = {...quest};
+          }
+        });
         
         renderQuests();
         setSyncStatus('');
       } catch (error) {
-        console.error('Move quest error:', error);
+        console.error('Reorder quests error:', error);
         setSyncStatus('Error', true);
-        showToast('Failed to move quest: ' + error.message, true);
+        showToast('Failed to reorder: ' + error.message, true);
       }
     }
 
