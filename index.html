@@ -1398,14 +1398,35 @@
     .quest-list {
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 8px;
+      max-height: 70vh;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    .quest-list::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .quest-list::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.3);
+      border-radius: 4px;
+    }
+
+    .quest-list::-webkit-scrollbar-thumb {
+      background: #5a1515;
+      border-radius: 4px;
+    }
+
+    .quest-list::-webkit-scrollbar-thumb:hover {
+      background: #8b0000;
     }
 
     .quest-item {
       background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
-      border: 2px solid #3d1515;
+      border: 1px solid #3d1515;
       border-radius: 4px;
-      padding: 20px;
+      overflow: hidden;
     }
 
     .quest-item.completed {
@@ -1413,23 +1434,92 @@
       border-color: #2a5a2a;
     }
 
-    .quest-header {
+    .quest-item.completed .quest-header-bar {
+      background: rgba(42, 90, 42, 0.2);
+    }
+
+    .quest-header-bar {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 10px;
+      align-items: center;
+      padding: 12px 15px;
+      background: rgba(139, 0, 0, 0.15);
+      cursor: pointer;
+      transition: background 0.2s;
+      gap: 10px;
+    }
+
+    .quest-header-bar:hover {
+      background: rgba(139, 0, 0, 0.25);
+    }
+
+    .quest-expand-icon {
+      color: #c9a227;
+      font-size: 0.8rem;
+      transition: transform 0.2s;
+      width: 16px;
+    }
+
+    .quest-item.expanded .quest-expand-icon {
+      transform: rotate(90deg);
     }
 
     .quest-title {
       color: #c9a227;
       font-family: 'Cinzel', serif;
-      font-size: 1.3rem;
+      font-size: 1.1rem;
       margin: 0;
+      flex: 1;
+    }
+
+    .quest-type-icon {
+      font-size: 1rem;
+      margin-right: 5px;
+    }
+
+    .quest-mini-progress {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #d4c4a8;
+    }
+
+    .quest-mini-progress-bar {
+      width: 60px;
+      height: 6px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .quest-mini-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #8b0000, #c9a227);
+      border-radius: 3px;
+    }
+
+    .quest-mini-progress-fill.complete {
+      background: linear-gradient(90deg, #2a5a2a, #6aba6a);
     }
 
     .quest-actions {
       display: flex;
-      gap: 8px;
+      gap: 5px;
+    }
+
+    .quest-actions .btn {
+      padding: 4px 8px;
+      font-size: 0.8rem;
+    }
+
+    .quest-content {
+      display: none;
+      padding: 15px;
+      border-top: 1px solid #3d1515;
+    }
+
+    .quest-item.expanded .quest-content {
+      display: block;
     }
 
     .quest-description {
@@ -1439,7 +1529,7 @@
     }
 
     .quest-progress-section {
-      margin-top: 15px;
+      margin-top: 10px;
     }
 
     .progress-label {
@@ -1694,15 +1784,28 @@
       background: linear-gradient(180deg, #0a1520 0%, #0d0404 100%);
     }
 
+    .quest-item.tracker .quest-header-bar {
+      background: rgba(42, 74, 106, 0.2);
+    }
+
+    .quest-item.tracker .quest-header-bar:hover {
+      background: rgba(42, 74, 106, 0.3);
+    }
+
     .quest-item.tracker .quest-title {
       color: #6ab4e8;
+    }
+
+    .quest-item.tracker .quest-mini-progress-fill {
+      background: linear-gradient(90deg, #2a5a8a, #6ab4e8);
     }
 
     .quest-item.tracker .progress-bar-fill {
       background: linear-gradient(90deg, #1a3a5a 0%, #2a5a8a 50%, #6ab4e8 100%);
     }
 
-    .quest-item.tracker .progress-bar-fill.complete {
+    .quest-item.tracker .progress-bar-fill.complete,
+    .quest-item.tracker .quest-mini-progress-fill.complete {
       background: linear-gradient(90deg, #2a5a2a 0%, #4a8a4a 50%, #6aba6a 100%);
     }
 
@@ -3609,88 +3712,102 @@
           <div class="dm-notes-section quest-dm-notes" data-quest-id="${quest.id}" style="display: none;">
             <div class="dm-notes-header">
               <h4>DM Notes</h4>
-              <button class="btn btn-secondary" onclick="toggleQuestDmNotesEdit('${quest.id}')">✏️ Edit</button>
+              <button class="btn btn-secondary" onclick="event.stopPropagation(); toggleQuestDmNotesEdit('${quest.id}')">✏️ Edit</button>
             </div>
             <div class="dm-notes-content" id="questDmNotes-${quest.id}">
               <div class="markdown-content">${quest.dmNotes ? marked.parse(quest.dmNotes) : '<span class="empty-notes">No DM notes yet.</span>'}</div>
             </div>
             <div class="dm-notes-actions" id="questDmNotesActions-${quest.id}" style="display: none;">
-              <button class="btn btn-secondary" onclick="cancelQuestDmNotesEdit('${quest.id}')">Cancel</button>
-              <button class="btn btn-primary" onclick="saveQuestDmNotes('${quest.id}')">💾 Save</button>
+              <button class="btn btn-secondary" onclick="event.stopPropagation(); cancelQuestDmNotesEdit('${quest.id}')">Cancel</button>
+              <button class="btn btn-primary" onclick="event.stopPropagation(); saveQuestDmNotes('${quest.id}')">💾 Save</button>
             </div>
           </div>
         `;
         
         const moveButtons = !quest.completed ? `
           <div class="move-buttons" style="display: none;">
-            <button class="btn btn-move" onclick="moveQuest('${quest.id}', 'up')" ${isFirst ? 'disabled' : ''} title="Move Up">▲</button>
-            <button class="btn btn-move" onclick="moveQuest('${quest.id}', 'down')" ${isLast ? 'disabled' : ''} title="Move Down">▼</button>
+            <button class="btn btn-move" onclick="event.stopPropagation(); moveQuest('${quest.id}', 'up')" ${isFirst ? 'disabled' : ''} title="Move Up">▲</button>
+            <button class="btn btn-move" onclick="event.stopPropagation(); moveQuest('${quest.id}', 'down')" ${isLast ? 'disabled' : ''} title="Move Down">▼</button>
           </div>
         ` : '';
         
+        const miniProgress = hasProgress ? `
+          <div class="quest-mini-progress">
+            <div class="quest-mini-progress-bar">
+              <div class="quest-mini-progress-fill ${isComplete ? 'complete' : ''}" style="width: ${progressPercent}%"></div>
+            </div>
+            <span>${quest.current}/${quest.total}</span>
+          </div>
+        ` : '';
+        
+        const typeIcon = quest.completed ? '✅' : (isTracker ? '📊' : '⚔️');
+        
+        // Content section (shown when expanded)
+        let contentHtml = '';
         if (isTracker) {
-          // Tracker: just title and progress bar
-          return `
-            <div class="quest-item tracker ${quest.completed ? 'completed' : ''}" data-id="${quest.id}">
-              <div class="quest-header">
-                ${moveButtons}
-                <h3 class="quest-title">${quest.completed ? '✅ ' : '📊 '}${quest.title}</h3>
-                <div class="quest-actions" style="display: none;">
-                  ${!quest.completed && isComplete ? `<button class="btn btn-secondary" onclick="completeQuest('${quest.id}')">✓ Complete</button>` : ''}
-                  <button class="btn btn-secondary" onclick="openQuestEditModal('${quest.id}')">✏️</button>
-                  <button class="btn delete-btn" onclick="deleteQuest('${quest.id}')">🗑️</button>
+          contentHtml = hasProgress ? `
+            <div class="quest-progress-section">
+              <div class="progress-label">
+                <span>${quest.progressLabel || 'Progress'}</span>
+                <span>${quest.current} / ${quest.total}</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${progressPercent}%">
+                  <span>${Math.round(progressPercent)}%</span>
                 </div>
               </div>
-              ${hasProgress ? `
-                <div class="quest-progress-section">
-                  <div class="progress-label">
-                    <span>${quest.progressLabel || 'Progress'}</span>
-                    <span>${quest.current} / ${quest.total}</span>
-                  </div>
-                  <div class="progress-bar-container">
-                    <div class="progress-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${progressPercent}%">
-                      <span>${Math.round(progressPercent)}%</span>
-                    </div>
-                  </div>
-                </div>
-              ` : ''}
-              ${dmNotesHtml}
             </div>
-          `;
+          ` : '';
         } else {
-          // Quest: title, description, optional progress
-          return `
-            <div class="quest-item ${quest.completed ? 'completed' : ''}" data-id="${quest.id}">
-              <div class="quest-header">
-                ${moveButtons}
-                <h3 class="quest-title">${quest.completed ? '✅ ' : '⚔️ '}${quest.title}</h3>
-                <div class="quest-actions" style="display: none;">
-                  ${!quest.completed ? `<button class="btn btn-secondary" onclick="completeQuest('${quest.id}')">✓ Complete</button>` : ''}
-                  <button class="btn btn-secondary" onclick="openQuestEditModal('${quest.id}')">✏️</button>
-                  <button class="btn delete-btn" onclick="deleteQuest('${quest.id}')">🗑️</button>
+          contentHtml = `
+            ${quest.description ? `<div class="quest-description markdown-content">${marked.parse(quest.description)}</div>` : ''}
+            ${hasProgress ? `
+              <div class="quest-progress-section">
+                <div class="progress-label">
+                  <span>${quest.progressLabel || 'Progress'}</span>
+                  <span>${quest.current} / ${quest.total}</span>
+                </div>
+                <div class="progress-bar-container">
+                  <div class="progress-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${progressPercent}%">
+                    <span>${Math.round(progressPercent)}%</span>
+                  </div>
                 </div>
               </div>
-              <div class="quest-description markdown-content">${marked.parse(quest.description || '')}</div>
-              ${hasProgress ? `
-                <div class="quest-progress-section">
-                  <div class="progress-label">
-                    <span>${quest.progressLabel || 'Progress'}</span>
-                    <span>${quest.current} / ${quest.total}</span>
-                  </div>
-                  <div class="progress-bar-container">
-                    <div class="progress-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${progressPercent}%">
-                      <span>${Math.round(progressPercent)}%</span>
-                    </div>
-                  </div>
-                </div>
-              ` : ''}
-              ${dmNotesHtml}
-            </div>
+            ` : ''}
           `;
         }
+        
+        return `
+          <div class="quest-item ${isTracker ? 'tracker' : ''} ${quest.completed ? 'completed' : ''}" data-id="${quest.id}">
+            <div class="quest-header-bar" onclick="toggleQuestExpand('${quest.id}')">
+              ${moveButtons}
+              <span class="quest-expand-icon">▶</span>
+              <span class="quest-type-icon">${typeIcon}</span>
+              <h3 class="quest-title">${quest.title}</h3>
+              ${miniProgress}
+              <div class="quest-actions" style="display: none;" onclick="event.stopPropagation()">
+                ${!quest.completed && (isComplete || !isTracker) ? `<button class="btn btn-secondary" onclick="completeQuest('${quest.id}')">✓</button>` : ''}
+                <button class="btn btn-secondary" onclick="openQuestEditModal('${quest.id}')">✏️</button>
+                <button class="btn delete-btn" onclick="deleteQuest('${quest.id}')">🗑️</button>
+              </div>
+            </div>
+            <div class="quest-content">
+              ${contentHtml}
+              ${dmNotesHtml}
+            </div>
+          </div>
+        `;
       }).join('');
       
       updateUIForPermissions();
+    }
+
+    // Toggle quest expand/collapse
+    function toggleQuestExpand(questId) {
+      const questItem = document.querySelector(`.quest-item[data-id="${questId}"]`);
+      if (questItem) {
+        questItem.classList.toggle('expanded');
+      }
     }
 
     // Toggle quest type in add form
