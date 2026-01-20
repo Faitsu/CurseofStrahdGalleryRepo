@@ -1032,6 +1032,42 @@
       text-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
     }
 
+    .modal-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-icon {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid #3d1515;
+      color: #d4c4a8;
+      width: 36px;
+      height: 36px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+
+    .btn-icon:hover {
+      background: rgba(139, 0, 0, 0.3);
+      border-color: #8b0000;
+    }
+
+    .btn-icon-danger:hover {
+      background: rgba(139, 0, 0, 0.4);
+      border-color: #8b0000;
+    }
+
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 0.85rem;
+    }
+
     .modal-tags {
       display: flex;
       flex-wrap: wrap;
@@ -1907,7 +1943,12 @@
 
     .folder-actions {
       display: flex;
-      gap: 8px;
+      gap: 5px;
+    }
+
+    .folder-actions .btn {
+      padding: 4px 8px;
+      font-size: 0.85rem;
     }
 
     .document-add-section {
@@ -2746,7 +2787,11 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3 id="documentModalTitle">Document Title</h3>
-        <button class="modal-close" onclick="closeDocumentModal()">&times;</button>
+        <div class="modal-header-actions">
+          <button class="btn-icon dm-only-btn" onclick="editDocument()" title="Edit" style="display:none;">✏️</button>
+          <button class="btn-icon btn-icon-danger dm-only-btn" onclick="deleteDocument()" title="Delete" style="display:none;">🗑️</button>
+          <button class="modal-close" onclick="closeDocumentModal()">&times;</button>
+        </div>
       </div>
       <div class="document-body markdown-content" id="documentModalBody"></div>
       
@@ -2754,21 +2799,15 @@
       <div class="dm-notes-section" id="docDmNotesSection" style="display: none;">
         <div class="dm-notes-header">
           <h4>DM Notes</h4>
-          <button class="btn btn-secondary" id="docDmNotesEditBtn" onclick="toggleDocDmNotesEdit()">✏️ Edit</button>
+          <button class="btn btn-secondary btn-sm" id="docDmNotesEditBtn" onclick="toggleDocDmNotesEdit()">✏️ Edit</button>
         </div>
         <div class="dm-notes-content" id="docDmNotesContent">
           <div class="markdown-content" id="docDmNotesView"></div>
         </div>
         <div class="dm-notes-actions" id="docDmNotesActions" style="display: none;">
-          <button class="btn btn-secondary" onclick="cancelDocDmNotesEdit()">Cancel</button>
-          <button class="btn btn-primary" onclick="saveDocDmNotes()">💾 Save Notes</button>
+          <button class="btn btn-secondary btn-sm" onclick="cancelDocDmNotesEdit()">Cancel</button>
+          <button class="btn btn-primary btn-sm" onclick="saveDocDmNotes()">💾 Save</button>
         </div>
-      </div>
-      
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeDocumentModal()">Close</button>
-        <button class="btn btn-primary dm-only-btn" onclick="editDocument()" style="display:none;">✏️ Edit</button>
-        <button class="btn delete-btn dm-only-btn" onclick="deleteDocument()" style="display:none;">🗑️ Delete</button>
       </div>
     </div>
   </div>
@@ -4810,9 +4849,9 @@
             <span class="folder-drag-handle" onclick="event.stopPropagation()">⋮⋮</span>
             <span class="folder-title">📁 ${folder.name}</span>
             <div class="folder-actions" style="display: none;" onclick="event.stopPropagation()">
-              <button class="btn btn-secondary" onclick="editFolderName('${folder.id}')" title="Rename">✏️</button>
-              <button class="btn btn-secondary" onclick="addSubfolder('${folder.id}')" title="Add Subfolder">📁+</button>
-              <button class="btn delete-btn" onclick="deleteFolder('${folder.id}')" title="Delete">🗑️</button>
+              <button class="btn-icon" onclick="editFolderName('${folder.id}')" title="Rename">✏️</button>
+              <button class="btn-icon" onclick="addSubfolder('${folder.id}')" title="Add Subfolder">📁</button>
+              <button class="btn-icon btn-icon-danger" onclick="deleteFolder('${folder.id}')" title="Delete">🗑️</button>
             </div>
             <span class="folder-toggle">▶</span>
           </div>
