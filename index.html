@@ -1645,6 +1645,76 @@
       gap: 15px;
     }
 
+    /* Quest Type Toggle */
+    .quest-type-toggle {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 10px;
+    }
+
+    .type-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #d4c4a8;
+      font-family: 'Cinzel', serif;
+    }
+
+    .type-option input[type="radio"] {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #5a1515;
+      border-radius: 50%;
+      background: transparent;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .type-option input[type="radio"]:checked {
+      border-color: #c9a227;
+    }
+
+    .type-option input[type="radio"]:checked::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 8px;
+      background: #c9a227;
+      border-radius: 50%;
+    }
+
+    /* Tracker specific styles */
+    .quest-item.tracker {
+      border-color: #2a4a6a;
+      background: linear-gradient(180deg, #0a1520 0%, #0d0404 100%);
+    }
+
+    .quest-item.tracker .quest-title {
+      color: #6ab4e8;
+    }
+
+    .quest-item.tracker .progress-bar-fill {
+      background: linear-gradient(90deg, #1a3a5a 0%, #2a5a8a 50%, #6ab4e8 100%);
+    }
+
+    .quest-item.tracker .progress-bar-fill.complete {
+      background: linear-gradient(90deg, #2a5a2a 0%, #4a8a4a 50%, #6aba6a 100%);
+    }
+
+    .tracker-badge {
+      background: rgba(106, 180, 232, 0.3);
+      color: #6ab4e8;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      margin-left: 10px;
+    }
+
     /* Search and Sort Section */
     .search-sort-section {
       background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
@@ -1977,18 +2047,30 @@
         <h2 class="tab-title">Quest Log</h2>
         
         <div class="dm-controls quest-add-section" id="questAddControls" style="display: none;">
-          <h3>Add New Quest</h3>
+          <h3>Add New Entry</h3>
           <div class="quest-form">
-            <input type="text" id="questTitleInput" placeholder="Quest title...">
-            <textarea id="questDescInput" placeholder="Quest description (supports Markdown)..." rows="3"></textarea>
-            <div class="quest-progress-input">
-              <label>Progress (optional):</label>
+            <div class="quest-type-toggle">
+              <label class="type-option">
+                <input type="radio" name="questType" value="quest" checked onchange="toggleQuestType()">
+                <span>⚔️ Quest</span>
+              </label>
+              <label class="type-option">
+                <input type="radio" name="questType" value="tracker" onchange="toggleQuestType()">
+                <span>📊 Tracker</span>
+              </label>
+            </div>
+            <input type="text" id="questTitleInput" placeholder="Title...">
+            <div id="questDescriptionSection">
+              <textarea id="questDescInput" placeholder="Quest description (supports Markdown)..." rows="3"></textarea>
+            </div>
+            <div class="quest-progress-input" id="questProgressSection">
+              <label>Progress:</label>
               <input type="number" id="questCurrentInput" placeholder="Current" min="0" style="width: 80px;">
               <span>/</span>
               <input type="number" id="questTotalInput" placeholder="Total" min="1" style="width: 80px;">
               <input type="text" id="questProgressLabel" placeholder="Label (e.g. 'Days')" style="width: 120px;">
             </div>
-            <button class="btn btn-primary" onclick="addQuest()">+ Add Quest</button>
+            <button class="btn btn-primary" onclick="addQuest()">+ Add Entry</button>
           </div>
         </div>
         
@@ -2134,19 +2216,29 @@
   <div class="modal" id="questEditModal">
     <div class="modal-content edit-modal">
       <div class="modal-header">
-        <h3>Edit Quest</h3>
+        <h3>Edit Entry</h3>
         <button class="modal-close" onclick="closeQuestEditModal()">&times;</button>
       </div>
       <div class="quest-edit-form">
-        <div>
-          <label for="editQuestTitleInput">Title</label>
-          <input type="text" id="editQuestTitleInput" placeholder="Quest title...">
+        <div class="quest-type-toggle">
+          <label class="type-option">
+            <input type="radio" name="editQuestType" value="quest" onchange="toggleEditQuestType()">
+            <span>⚔️ Quest</span>
+          </label>
+          <label class="type-option">
+            <input type="radio" name="editQuestType" value="tracker" onchange="toggleEditQuestType()">
+            <span>📊 Tracker</span>
+          </label>
         </div>
         <div>
+          <label for="editQuestTitleInput">Title</label>
+          <input type="text" id="editQuestTitleInput" placeholder="Title...">
+        </div>
+        <div id="editQuestDescriptionSection">
           <label for="editQuestDescInput">Description (supports Markdown)</label>
           <textarea id="editQuestDescInput" rows="4" placeholder="Quest description..."></textarea>
         </div>
-        <div class="quest-progress-input">
+        <div class="quest-progress-input" id="editQuestProgressSection">
           <label>Progress:</label>
           <input type="number" id="editQuestCurrentInput" placeholder="Current" min="0" style="width: 80px;">
           <span>/</span>
@@ -3293,73 +3385,134 @@
       const questList = document.getElementById('questList');
       const emptyText = document.getElementById('emptyQuestsText');
       
+      if (!questList) return;
+      
       if (quests.length === 0) {
-        questList.innerHTML = '';
-        emptyText.style.display = 'block';
-        questList.appendChild(emptyText);
+        questList.innerHTML = '<p class="empty-text" id="emptyQuestsText">No quests or trackers yet.</p>';
         return;
       }
       
-      emptyText.style.display = 'none';
+      if (emptyText) emptyText.style.display = 'none';
       
-      // Sort quests: incomplete first, then by date
+      // Sort: incomplete first, then trackers, then by date
       const sortedQuests = [...quests].sort((a, b) => {
         if (a.completed !== b.completed) return a.completed ? 1 : -1;
+        if (a.type !== b.type) return a.type === 'tracker' ? 1 : -1;
         return (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0);
       });
       
       questList.innerHTML = sortedQuests.map(quest => {
+        const isTracker = quest.type === 'tracker';
         const hasProgress = quest.total && quest.total > 0;
         const progressPercent = hasProgress ? Math.min(100, (quest.current / quest.total) * 100) : 0;
         const isComplete = hasProgress && quest.current >= quest.total;
         
-        return `
-          <div class="quest-item ${quest.completed ? 'completed' : ''}" data-id="${quest.id}">
-            <div class="quest-header">
-              <h3 class="quest-title">${quest.completed ? '✅ ' : ''}${quest.title}</h3>
-              <div class="quest-actions" style="display: none;">
-                ${!quest.completed ? `<button class="btn btn-secondary" onclick="completeQuest('${quest.id}')">✓ Complete</button>` : ''}
-                <button class="btn btn-secondary" onclick="openQuestEditModal('${quest.id}')">✏️</button>
-                <button class="btn delete-btn" onclick="deleteQuest('${quest.id}')">🗑️</button>
-              </div>
-            </div>
-            <div class="quest-description markdown-content">${marked.parse(quest.description || '')}</div>
-            ${hasProgress ? `
-              <div class="quest-progress-section">
-                <div class="progress-label">
-                  <span>${quest.progressLabel || 'Progress'}</span>
-                  <span>${quest.current} / ${quest.total}</span>
+        if (isTracker) {
+          // Tracker: just title and progress bar
+          return `
+            <div class="quest-item tracker ${quest.completed ? 'completed' : ''}" data-id="${quest.id}">
+              <div class="quest-header">
+                <h3 class="quest-title">${quest.completed ? '✅ ' : '📊 '}${quest.title}</h3>
+                <div class="quest-actions" style="display: none;">
+                  ${!quest.completed && isComplete ? `<button class="btn btn-secondary" onclick="completeQuest('${quest.id}')">✓ Complete</button>` : ''}
+                  <button class="btn btn-secondary" onclick="openQuestEditModal('${quest.id}')">✏️</button>
+                  <button class="btn delete-btn" onclick="deleteQuest('${quest.id}')">🗑️</button>
                 </div>
-                <div class="progress-bar-container">
-                  <div class="progress-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${progressPercent}%">
-                    <span>${Math.round(progressPercent)}%</span>
+              </div>
+              ${hasProgress ? `
+                <div class="quest-progress-section">
+                  <div class="progress-label">
+                    <span>${quest.progressLabel || 'Progress'}</span>
+                    <span>${quest.current} / ${quest.total}</span>
+                  </div>
+                  <div class="progress-bar-container">
+                    <div class="progress-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${progressPercent}%">
+                      <span>${Math.round(progressPercent)}%</span>
+                    </div>
                   </div>
                 </div>
+              ` : ''}
+            </div>
+          `;
+        } else {
+          // Quest: title, description, optional progress
+          return `
+            <div class="quest-item ${quest.completed ? 'completed' : ''}" data-id="${quest.id}">
+              <div class="quest-header">
+                <h3 class="quest-title">${quest.completed ? '✅ ' : '⚔️ '}${quest.title}</h3>
+                <div class="quest-actions" style="display: none;">
+                  ${!quest.completed ? `<button class="btn btn-secondary" onclick="completeQuest('${quest.id}')">✓ Complete</button>` : ''}
+                  <button class="btn btn-secondary" onclick="openQuestEditModal('${quest.id}')">✏️</button>
+                  <button class="btn delete-btn" onclick="deleteQuest('${quest.id}')">🗑️</button>
+                </div>
               </div>
-            ` : ''}
-          </div>
-        `;
+              <div class="quest-description markdown-content">${marked.parse(quest.description || '')}</div>
+              ${hasProgress ? `
+                <div class="quest-progress-section">
+                  <div class="progress-label">
+                    <span>${quest.progressLabel || 'Progress'}</span>
+                    <span>${quest.current} / ${quest.total}</span>
+                  </div>
+                  <div class="progress-bar-container">
+                    <div class="progress-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${progressPercent}%">
+                      <span>${Math.round(progressPercent)}%</span>
+                    </div>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }
       }).join('');
       
       updateUIForPermissions();
     }
 
+    // Toggle quest type in add form
+    function toggleQuestType() {
+      const isTracker = document.querySelector('input[name="questType"]:checked').value === 'tracker';
+      const descSection = document.getElementById('questDescriptionSection');
+      const progressSection = document.getElementById('questProgressSection');
+      
+      if (descSection) descSection.style.display = isTracker ? 'none' : 'block';
+      if (progressSection) {
+        // For tracker, progress is required; for quest, it's optional
+        const label = progressSection.querySelector('label');
+        if (label) label.textContent = isTracker ? 'Progress:' : 'Progress (optional):';
+      }
+    }
+
+    // Toggle quest type in edit form
+    function toggleEditQuestType() {
+      const isTracker = document.querySelector('input[name="editQuestType"]:checked').value === 'tracker';
+      const descSection = document.getElementById('editQuestDescriptionSection');
+      
+      if (descSection) descSection.style.display = isTracker ? 'none' : 'block';
+    }
+
     async function addQuest() {
       if (!isDM) return;
       
+      const questType = document.querySelector('input[name="questType"]:checked').value;
       const title = document.getElementById('questTitleInput').value.trim();
-      const description = document.getElementById('questDescInput').value;
+      const description = questType === 'quest' ? document.getElementById('questDescInput').value : '';
       const current = parseInt(document.getElementById('questCurrentInput').value) || 0;
       const total = parseInt(document.getElementById('questTotalInput').value) || 0;
       const progressLabel = document.getElementById('questProgressLabel').value.trim();
       
       if (!title) {
-        showToast('Please enter a quest title', true);
+        showToast('Please enter a title', true);
+        return;
+      }
+      
+      if (questType === 'tracker' && (!total || total <= 0)) {
+        showToast('Trackers require a total value', true);
         return;
       }
       
       const newQuest = {
         id: Date.now().toString(),
+        type: questType,
         title,
         description,
         current,
@@ -3383,17 +3536,23 @@
         document.getElementById('questProgressLabel').value = '';
         
         setSyncStatus('');
-        showToast('Quest added!');
+        showToast(questType === 'tracker' ? 'Tracker added!' : 'Quest added!');
       } catch (error) {
         console.error('Add quest error:', error);
         setSyncStatus('Error', true);
-        showToast('Failed to add quest', true);
+        showToast('Failed to add entry', true);
       }
     }
 
     function openQuestEditModal(id) {
       currentEditingQuest = quests.find(q => q.id === id);
       if (!currentEditingQuest) return;
+      
+      // Set the type radio button
+      const questType = currentEditingQuest.type || 'quest';
+      const radioBtn = document.querySelector(`input[name="editQuestType"][value="${questType}"]`);
+      if (radioBtn) radioBtn.checked = true;
+      toggleEditQuestType();
       
       document.getElementById('editQuestTitleInput').value = currentEditingQuest.title;
       document.getElementById('editQuestDescInput').value = currentEditingQuest.description || '';
@@ -3412,8 +3571,11 @@
     async function saveQuestEdit() {
       if (!currentEditingQuest || !isDM) return;
       
+      const questType = document.querySelector('input[name="editQuestType"]:checked').value;
+      
+      currentEditingQuest.type = questType;
       currentEditingQuest.title = document.getElementById('editQuestTitleInput').value.trim();
-      currentEditingQuest.description = document.getElementById('editQuestDescInput').value;
+      currentEditingQuest.description = questType === 'quest' ? document.getElementById('editQuestDescInput').value : '';
       currentEditingQuest.current = parseInt(document.getElementById('editQuestCurrentInput').value) || 0;
       currentEditingQuest.total = parseInt(document.getElementById('editQuestTotalInput').value) || 0;
       currentEditingQuest.progressLabel = document.getElementById('editQuestProgressLabel').value.trim();
@@ -3431,11 +3593,11 @@
         renderQuests();
         closeQuestEditModal();
         setSyncStatus('');
-        showToast('Quest updated!');
+        showToast('Entry updated!');
       } catch (error) {
         console.error('Save quest error:', error);
         setSyncStatus('Error', true);
-        showToast('Failed to save quest: ' + error.message, true);
+        showToast('Failed to save: ' + error.message, true);
       }
     }
 
@@ -3479,17 +3641,17 @@
       const foldersContainer = document.getElementById('foldersContainer');
       const emptyText = document.getElementById('emptyFoldersText');
       
+      if (!foldersContainer) return;
+      
       // Get root level folders
       const rootFolders = folders.filter(f => !f.parentId);
       
       if (rootFolders.length === 0) {
-        foldersContainer.innerHTML = '';
-        emptyText.style.display = 'block';
-        foldersContainer.appendChild(emptyText);
+        foldersContainer.innerHTML = '<p class="empty-text" id="emptyFoldersText">No folders yet.</p>';
         return;
       }
       
-      emptyText.style.display = 'none';
+      if (emptyText) emptyText.style.display = 'none';
       foldersContainer.innerHTML = rootFolders.map(folder => renderFolderHTML(folder, 0)).join('');
       
       updateUIForPermissions();
