@@ -1426,8 +1426,7 @@
       background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
       border: 1px solid #3d1515;
       border-radius: 4px;
-      overflow: hidden;
-      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.3s;
     }
 
     .quest-item.dragging {
@@ -1544,10 +1543,40 @@
       display: none;
       padding: 15px;
       border-top: 1px solid #3d1515;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .quest-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .quest-content::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.2);
+      border-radius: 3px;
+    }
+
+    .quest-content::-webkit-scrollbar-thumb {
+      background: #5a1515;
+      border-radius: 3px;
     }
 
     .quest-item.expanded .quest-content {
       display: block;
+    }
+
+    /* Dim other quests when one is expanded */
+    .quest-list:has(.quest-item.expanded) .quest-item:not(.expanded) {
+      opacity: 0.5;
+    }
+
+    .quest-list:has(.quest-item.expanded) .quest-item:not(.expanded):hover {
+      opacity: 0.8;
+    }
+
+    .quest-list:has(.quest-item.expanded) .quest-item.expanded {
+      opacity: 1;
+      box-shadow: 0 0 15px rgba(201, 162, 39, 0.2);
     }
 
     .quest-description {
