@@ -1238,6 +1238,403 @@
       background: rgba(201, 162, 39, 0.5) !important;
     }
 
+    /* Tab Navigation */
+    .tab-navigation {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 20px;
+      background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+      padding: 10px;
+      border-radius: 4px;
+      border: 2px solid #3d1515;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 12px 24px;
+      background: rgba(139, 0, 0, 0.2);
+      border: 1px solid #5a1515;
+      border-radius: 4px;
+      color: #d4c4a8;
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .tab-btn:hover {
+      background: rgba(139, 0, 0, 0.4);
+      border-color: #8b0000;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(180deg, #4a0000 0%, #2d0808 100%);
+      border-color: #c9a227;
+      color: #c9a227;
+      box-shadow: 0 0 15px rgba(139, 0, 0, 0.4);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .tab-title {
+      text-align: center;
+      color: #c9a227;
+      font-family: 'Cinzel', serif;
+      font-size: 2rem;
+      margin-bottom: 25px;
+      text-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
+    }
+
+    /* Map Tab */
+    .map-container {
+      background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+      border: 2px solid #3d1515;
+      border-radius: 4px;
+      padding: 25px;
+    }
+
+    .map-image-section {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .map-image-wrapper {
+      background: rgba(0,0,0,0.3);
+      border: 2px solid #5a1515;
+      border-radius: 4px;
+      min-height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .map-image-wrapper img {
+      max-width: 100%;
+      max-height: 80vh;
+      object-fit: contain;
+    }
+
+    .empty-map-text, .empty-text {
+      color: rgba(212, 196, 168, 0.5);
+      font-style: italic;
+    }
+
+    .dm-controls {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .dm-controls textarea {
+      width: 100%;
+      min-height: 100px;
+    }
+
+    .map-description-section {
+      border-top: 1px solid #3d1515;
+      padding-top: 20px;
+    }
+
+    .map-description-section h3 {
+      color: #c9a227;
+      font-family: 'Cinzel', serif;
+      margin-bottom: 15px;
+    }
+
+    .map-description-view {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #3d1515;
+      border-radius: 4px;
+      padding: 20px;
+      min-height: 100px;
+    }
+
+    /* Quest Log Tab */
+    .quest-add-section {
+      background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+      border: 2px solid #3d1515;
+      border-radius: 4px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .quest-add-section h3 {
+      color: #c9a227;
+      font-family: 'Cinzel', serif;
+      margin-bottom: 15px;
+    }
+
+    .quest-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .quest-progress-input {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .quest-progress-input label {
+      margin-bottom: 0;
+    }
+
+    .quest-progress-input span {
+      color: #c9a227;
+      font-size: 1.2rem;
+    }
+
+    .quest-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .quest-item {
+      background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+      border: 2px solid #3d1515;
+      border-radius: 4px;
+      padding: 20px;
+    }
+
+    .quest-item.completed {
+      opacity: 0.6;
+      border-color: #2a5a2a;
+    }
+
+    .quest-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .quest-title {
+      color: #c9a227;
+      font-family: 'Cinzel', serif;
+      font-size: 1.3rem;
+      margin: 0;
+    }
+
+    .quest-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .quest-description {
+      color: #d4c4a8;
+      margin-bottom: 15px;
+      line-height: 1.6;
+    }
+
+    .quest-progress-section {
+      margin-top: 15px;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: #d4c4a8;
+      font-size: 0.9rem;
+    }
+
+    .progress-bar-container {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid #5a1515;
+      border-radius: 4px;
+      height: 24px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4a0000 0%, #8b0000 50%, #c9a227 100%);
+      border-radius: 3px;
+      transition: width 0.5s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 30px;
+    }
+
+    .progress-bar-fill span {
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+
+    .progress-bar-fill.complete {
+      background: linear-gradient(90deg, #2a5a2a 0%, #4a8a4a 50%, #6aba6a 100%);
+    }
+
+    /* Documents Tab */
+    .folder-add-section {
+      background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+      border: 2px solid #3d1515;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .folder-add-section input {
+      flex: 1;
+      max-width: 300px;
+    }
+
+    .folders-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .folder {
+      background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+      border: 2px solid #3d1515;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .folder-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background: rgba(139, 0, 0, 0.2);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .folder-header:hover {
+      background: rgba(139, 0, 0, 0.3);
+    }
+
+    .folder-title {
+      color: #c9a227;
+      font-family: 'Cinzel', serif;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .folder-toggle {
+      color: #c9a227;
+      font-size: 1.2rem;
+      transition: transform 0.3s;
+    }
+
+    .folder.open .folder-toggle {
+      transform: rotate(90deg);
+    }
+
+    .folder-content {
+      display: none;
+      padding: 15px 20px;
+      border-top: 1px solid #3d1515;
+    }
+
+    .folder.open .folder-content {
+      display: block;
+    }
+
+    .folder-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .document-add-section {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #3d1515;
+      flex-wrap: wrap;
+    }
+
+    .document-add-section input {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .documents-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .document-item {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #5a1515;
+      border-radius: 4px;
+      padding: 15px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .document-item:hover {
+      border-color: #8b0000;
+      background: rgba(139, 0, 0, 0.1);
+    }
+
+    .document-title {
+      color: #c9a227;
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      margin-bottom: 5px;
+    }
+
+    .document-preview {
+      color: rgba(212, 196, 168, 0.7);
+      font-size: 0.9rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .no-documents {
+      color: rgba(212, 196, 168, 0.5);
+      font-style: italic;
+      text-align: center;
+      padding: 20px;
+    }
+
+    /* Document Modal */
+    .document-modal .modal-content {
+      max-width: 700px;
+    }
+
+    .document-modal .document-body {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #3d1515;
+      border-radius: 4px;
+      padding: 20px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    /* Quest Edit Modal */
+    .quest-edit-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
     /* Search and Sort Section */
     .search-sort-section {
       background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
@@ -1396,7 +1793,7 @@
   <!-- Loading Overlay -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-spinner"></div>
-    <div class="loading-text">Awakening the darkness...</div>
+    <div class="loading-text">Travelling Through the Mist...</div>
   </div>
 
   <div class="container">
@@ -1424,104 +1821,183 @@
         <button class="btn-signout" onclick="signOutUser()">Sign Out</button>
       </div>
 
-      <!-- Active Filter Display -->
-      <div class="active-filter" id="activeFilter">
-        <span>Filtering by: <span id="filterName"></span></span>
-        <button class="clear-filter" onclick="clearFilter()">✕ Clear Filter</button>
+      <!-- Tab Navigation -->
+      <div class="tab-navigation">
+        <button class="tab-btn active" onclick="switchTab('gallery')">📖 Gallery</button>
+        <button class="tab-btn" onclick="switchTab('map')">🗺️ Map of Barovia</button>
+        <button class="tab-btn" onclick="switchTab('quests')">⚔️ Quest Log</button>
+        <button class="tab-btn" onclick="switchTab('documents')">📜 Documents</button>
       </div>
 
-      <!-- Controls -->
-      <div class="controls">
-        <div class="upload-section">
-          <div>
-            <label>Image</label>
-            <label class="file-label" for="imageInput">
-              📁 Choose Image
-            </label>
-            <input type="file" id="imageInput" accept="image/*">
-          </div>
-          <div>
-            <label for="titleInput">Title</label>
-            <input type="text" id="titleInput" placeholder="Enter image title...">
-          </div>
-          <div>
-            <label for="hoverTextInput">Hover Text</label>
-            <input type="text" id="hoverTextInput" placeholder="Short preview shown on hover...">
-          </div>
-          <div>
-            <label for="textInput">Full Description</label>
-            <textarea id="textInput" placeholder="Detailed text shown when clicked..."></textarea>
-          </div>
-          <div>
-            <label for="entryTagsInput">Tags</label>
-            <input type="text" id="entryTagsInput" placeholder="e.g. Character, NPC, Vallaki">
-          </div>
-          <div>
-            <button class="btn btn-primary" id="addBtn" onclick="addItem()" disabled>
-              + Add to Gallery
-            </button>
-          </div>
-          <!-- DM Only: Private Toggle -->
-          <div class="private-toggle-container" id="privateToggleContainer" style="display: none;">
-            <label class="toggle-label">
-              <input type="checkbox" id="privateToggle">
-              <span class="toggle-slider"></span>
-              <span class="toggle-text">DM Only (Private)</span>
-            </label>
-          </div>
+      <!-- ============== GALLERY TAB ============== -->
+      <div class="tab-content active" id="galleryTab">
+        <!-- Active Filter Display -->
+        <div class="active-filter" id="activeFilter">
+          <span>Filtering by: <span id="filterName"></span></span>
+          <button class="clear-filter" onclick="clearFilter()">✕ Clear Filter</button>
         </div>
 
-        <div class="image-preview" id="imagePreview"></div>
-        
-        <!-- Selected Tags Preview -->
-        <div class="selected-tags-preview" id="selectedTagsPreview"></div>
-
-        <!-- Tags Section -->
-        <div class="tags-section">
-          <div class="tags-header">
-            <h3>🏷️ Tags</h3>
-            <div class="tag-input-group">
-              <input type="text" id="tagSearchInput" placeholder="🔍 Search tags..." oninput="filterTagsList()">
-              <input type="text" id="newTagInput" placeholder="New tag name..." onkeypress="handleTagKeypress(event)">
-              <button class="btn btn-primary" onclick="createTag()">+ Create Tag</button>
+        <!-- Controls -->
+        <div class="controls">
+          <div class="upload-section">
+            <div>
+              <label>Image</label>
+              <label class="file-label" for="imageInput">
+                📁 Choose Image
+              </label>
+              <input type="file" id="imageInput" accept="image/*">
+            </div>
+            <div>
+              <label for="titleInput">Title</label>
+              <input type="text" id="titleInput" placeholder="Enter image title...">
+            </div>
+            <div>
+              <label for="hoverTextInput">Hover Text</label>
+              <input type="text" id="hoverTextInput" placeholder="Short preview shown on hover...">
+            </div>
+            <div>
+              <label for="textInput">Full Description</label>
+              <textarea id="textInput" placeholder="Detailed text shown when clicked..."></textarea>
+            </div>
+            <div>
+              <label for="entryTagsInput">Tags</label>
+              <input type="text" id="entryTagsInput" placeholder="e.g. Character, NPC, Vallaki">
+            </div>
+            <div>
+              <button class="btn btn-primary" id="addBtn" onclick="addItem()" disabled>
+                + Add to Gallery
+              </button>
+            </div>
+            <!-- DM Only: Private Toggle -->
+            <div class="private-toggle-container" id="privateToggleContainer" style="display: none;">
+              <label class="toggle-label">
+                <input type="checkbox" id="privateToggle">
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">DM Only (Private)</span>
+              </label>
             </div>
           </div>
-          <div class="tag-list" id="tagList"></div>
-          <div class="no-tags-found" id="noTagsFound" style="display: none;">No tags found matching your search.</div>
+
+          <div class="image-preview" id="imagePreview"></div>
+          
+          <!-- Selected Tags Preview -->
+          <div class="selected-tags-preview" id="selectedTagsPreview"></div>
+
+          <!-- Tags Section -->
+          <div class="tags-section">
+            <div class="tags-header">
+              <h3>🏷️ Tags</h3>
+              <div class="tag-input-group">
+                <input type="text" id="tagSearchInput" placeholder="🔍 Search tags..." oninput="filterTagsList()">
+                <input type="text" id="newTagInput" placeholder="New tag name..." onkeypress="handleTagKeypress(event)">
+                <button class="btn btn-primary" onclick="createTag()">+ Create Tag</button>
+              </div>
+            </div>
+            <div class="tag-list" id="tagList"></div>
+            <div class="no-tags-found" id="noTagsFound" style="display: none;">No tags found matching your search.</div>
+          </div>
+        </div>
+
+        <!-- Search and Sort Controls -->
+        <div class="search-sort-section">
+          <div class="search-box">
+            <input type="text" id="entrySearchInput" placeholder="🔍 Search entries by title or text..." oninput="applyFilters()">
+          </div>
+          <div class="sort-controls">
+            <label>Sort by:</label>
+            <select id="sortSelect" onchange="applyFilters()">
+              <option value="date-desc">Newest First</option>
+              <option value="date-asc">Oldest First</option>
+              <option value="name-asc">Name (A-Z)</option>
+              <option value="name-desc">Name (Z-A)</option>
+            </select>
+          </div>
+          <div class="quick-filters">
+            <span class="quick-filter-label">Quick Filters:</span>
+            <button class="quick-filter-btn" onclick="quickFilter('The Experienced')">🎭 The Experienced</button>
+            <button class="quick-filter-btn" onclick="quickFilter('Location')">📍 Location</button>
+            <button class="quick-filter-btn" onclick="quickFilter('Item')">⚔️ Item</button>
+            <button class="quick-filter-btn" onclick="quickFilter('NPC')">🧙 NPC</button>
+            <button class="quick-filter-btn" onclick="quickFilter('Enemies')">👹 Enemies</button>
+          </div>
+        </div>
+
+        <!-- Gallery -->
+        <div class="gallery" id="gallery">
+          <div class="empty-state" id="emptyState">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p>No images yet. Upload your first image above!</p>
+          </div>
         </div>
       </div>
 
-      <!-- Search and Sort Controls -->
-      <div class="search-sort-section">
-        <div class="search-box">
-          <input type="text" id="entrySearchInput" placeholder="🔍 Search entries by title or text..." oninput="applyFilters()">
-        </div>
-        <div class="sort-controls">
-          <label>Sort by:</label>
-          <select id="sortSelect" onchange="applyFilters()">
-            <option value="date-desc">Newest First</option>
-            <option value="date-asc">Oldest First</option>
-            <option value="name-asc">Name (A-Z)</option>
-            <option value="name-desc">Name (Z-A)</option>
-          </select>
-        </div>
-        <div class="quick-filters">
-          <span class="quick-filter-label">Quick Filters:</span>
-          <button class="quick-filter-btn" onclick="quickFilter('The Experienced')">🎭 The Experienced</button>
-          <button class="quick-filter-btn" onclick="quickFilter('Location')">📍 Location</button>
-          <button class="quick-filter-btn" onclick="quickFilter('Item')">⚔️ Item</button>
-          <button class="quick-filter-btn" onclick="quickFilter('NPC')">🧙 NPC</button>
-          <button class="quick-filter-btn" onclick="quickFilter('Enemies')">👹 Enemies</button>
+      <!-- ============== MAP TAB ============== -->
+      <div class="tab-content" id="mapTab">
+        <h2 class="tab-title">Map of Barovia</h2>
+        
+        <div class="map-container">
+          <div class="map-image-section">
+            <div class="map-image-wrapper" id="mapImageWrapper">
+              <p class="empty-map-text" id="emptyMapText">No map uploaded yet</p>
+              <img id="mapImage" src="" alt="Map of Barovia" style="display: none;">
+            </div>
+            <div class="dm-controls" id="mapControls" style="display: none;">
+              <label class="btn btn-primary" for="mapImageInput">📁 Upload Map Image</label>
+              <input type="file" id="mapImageInput" accept="image/*" style="display: none;">
+            </div>
+          </div>
+          
+          <div class="map-description-section">
+            <h3>Description</h3>
+            <div class="map-description-view markdown-content" id="mapDescriptionView">
+              <p class="empty-text">No description added yet.</p>
+            </div>
+            <div class="dm-controls" id="mapDescControls" style="display: none;">
+              <textarea id="mapDescriptionInput" placeholder="Add a description for the map (supports Markdown)..." rows="6"></textarea>
+              <button class="btn btn-primary" onclick="saveMapDescription()">💾 Save Description</button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Gallery -->
-      <div class="gallery" id="gallery">
-        <div class="empty-state" id="emptyState">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <p>No images yet. Upload your first image above!</p>
+      <!-- ============== QUEST LOG TAB ============== -->
+      <div class="tab-content" id="questsTab">
+        <h2 class="tab-title">Quest Log</h2>
+        
+        <div class="dm-controls quest-add-section" id="questAddControls" style="display: none;">
+          <h3>Add New Quest</h3>
+          <div class="quest-form">
+            <input type="text" id="questTitleInput" placeholder="Quest title...">
+            <textarea id="questDescInput" placeholder="Quest description (supports Markdown)..." rows="3"></textarea>
+            <div class="quest-progress-input">
+              <label>Progress (optional):</label>
+              <input type="number" id="questCurrentInput" placeholder="Current" min="0" style="width: 80px;">
+              <span>/</span>
+              <input type="number" id="questTotalInput" placeholder="Total" min="1" style="width: 80px;">
+              <input type="text" id="questProgressLabel" placeholder="Label (e.g. 'Days')" style="width: 120px;">
+            </div>
+            <button class="btn btn-primary" onclick="addQuest()">+ Add Quest</button>
+          </div>
+        </div>
+        
+        <div class="quest-list" id="questList">
+          <p class="empty-text" id="emptyQuestsText">No quests yet.</p>
+        </div>
+      </div>
+
+      <!-- ============== DOCUMENTS TAB ============== -->
+      <div class="tab-content" id="documentsTab">
+        <h2 class="tab-title">Documents</h2>
+        
+        <div class="dm-controls folder-add-section" id="folderAddControls" style="display: none;">
+          <input type="text" id="newFolderInput" placeholder="New folder name...">
+          <button class="btn btn-primary" onclick="addFolder()">📁 Create Folder</button>
+        </div>
+        
+        <div class="folders-container" id="foldersContainer">
+          <p class="empty-text" id="emptyFoldersText">No folders yet.</p>
         </div>
       </div>
     </div>
@@ -1603,6 +2079,77 @@
     </div>
   </div>
 
+  <!-- Document View Modal -->
+  <div class="modal document-modal" id="documentModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="documentModalTitle">Document Title</h3>
+        <button class="modal-close" onclick="closeDocumentModal()">&times;</button>
+      </div>
+      <div class="document-body markdown-content" id="documentModalBody"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeDocumentModal()">Close</button>
+        <button class="btn btn-primary dm-only-btn" onclick="editDocument()" style="display:none;">✏️ Edit</button>
+        <button class="btn delete-btn dm-only-btn" onclick="deleteDocument()" style="display:none;">🗑️ Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Document Edit Modal -->
+  <div class="modal" id="documentEditModal">
+    <div class="modal-content edit-modal">
+      <div class="modal-header">
+        <h3>Edit Document</h3>
+        <button class="modal-close" onclick="closeDocumentEditModal()">&times;</button>
+      </div>
+      <div class="edit-form">
+        <div>
+          <label for="editDocTitleInput">Title</label>
+          <input type="text" id="editDocTitleInput" placeholder="Document title...">
+        </div>
+        <div>
+          <label for="editDocContentInput">Content (supports Markdown)</label>
+          <textarea id="editDocContentInput" rows="10" placeholder="Document content..."></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeDocumentEditModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveDocumentEdit()">💾 Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quest Edit Modal -->
+  <div class="modal" id="questEditModal">
+    <div class="modal-content edit-modal">
+      <div class="modal-header">
+        <h3>Edit Quest</h3>
+        <button class="modal-close" onclick="closeQuestEditModal()">&times;</button>
+      </div>
+      <div class="quest-edit-form">
+        <div>
+          <label for="editQuestTitleInput">Title</label>
+          <input type="text" id="editQuestTitleInput" placeholder="Quest title...">
+        </div>
+        <div>
+          <label for="editQuestDescInput">Description (supports Markdown)</label>
+          <textarea id="editQuestDescInput" rows="4" placeholder="Quest description..."></textarea>
+        </div>
+        <div class="quest-progress-input">
+          <label>Progress:</label>
+          <input type="number" id="editQuestCurrentInput" placeholder="Current" min="0" style="width: 80px;">
+          <span>/</span>
+          <input type="number" id="editQuestTotalInput" placeholder="Total" min="1" style="width: 80px;">
+          <input type="text" id="editQuestProgressLabel" placeholder="Label" style="width: 120px;">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeQuestEditModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveQuestEdit()">💾 Save</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
   <div class="toast" id="toast"></div>
 
@@ -1636,6 +2183,14 @@
     let currentSort = 'date-desc';
     let isAdmin = false;
     let isDM = false;
+    
+    // New tab data
+    let mapData = { image: '', description: '' };
+    let quests = [];
+    let folders = [];
+    let currentEditingQuest = null;
+    let currentEditingDocument = null;
+    let currentEditingFolder = null;
     
     // Dungeon Master email - only this user can see private entries and the private toggle
     const DM_EMAIL = 'ericacookiechou@gmail.com';
@@ -1706,6 +2261,16 @@
       const titleInputs = document.querySelectorAll('.gallery-item .title-input');
       const privateToggle = document.getElementById('privateToggleContainer');
       const publishBtns = document.querySelectorAll('.publish-btn');
+      const dmOnlyBtns = document.querySelectorAll('.dm-only-btn');
+      
+      // DM-only controls for all tabs
+      const mapControls = document.getElementById('mapControls');
+      const mapDescControls = document.getElementById('mapDescControls');
+      const questAddControls = document.getElementById('questAddControls');
+      const folderAddControls = document.getElementById('folderAddControls');
+      const questActionBtns = document.querySelectorAll('.quest-actions');
+      const folderActionBtns = document.querySelectorAll('.folder-actions');
+      const docAddSections = document.querySelectorAll('.document-add-section');
       
       if (isAdmin) {
         if (controls) controls.style.display = 'block';
@@ -1724,6 +2289,16 @@
       publishBtns.forEach(btn => {
         btn.style.display = isDM ? 'inline-block' : 'none';
       });
+      
+      // DM controls for other tabs
+      if (mapControls) mapControls.style.display = isDM ? 'flex' : 'none';
+      if (mapDescControls) mapDescControls.style.display = isDM ? 'flex' : 'none';
+      if (questAddControls) questAddControls.style.display = isDM ? 'block' : 'none';
+      if (folderAddControls) folderAddControls.style.display = isDM ? 'flex' : 'none';
+      questActionBtns.forEach(el => el.style.display = isDM ? 'flex' : 'none');
+      folderActionBtns.forEach(el => el.style.display = isDM ? 'flex' : 'none');
+      docAddSections.forEach(el => el.style.display = isDM ? 'flex' : 'none');
+      dmOnlyBtns.forEach(btn => btn.style.display = isDM ? 'inline-block' : 'none');
     }
 
     // Sign in with Google
@@ -1778,6 +2353,29 @@
         itemsSnapshot.forEach(doc => {
           items.push({ id: doc.id, ...doc.data() });
         });
+
+        // Load map data
+        const mapDoc = await db.collection('public').doc('map').get();
+        if (mapDoc.exists) {
+          mapData = mapDoc.data();
+          renderMap();
+        }
+
+        // Load quests
+        const questsSnapshot = await db.collection('public').doc('data').collection('quests').get();
+        quests = [];
+        questsSnapshot.forEach(doc => {
+          quests.push({ id: doc.id, ...doc.data() });
+        });
+        renderQuests();
+
+        // Load folders and documents
+        const foldersSnapshot = await db.collection('public').doc('data').collection('folders').get();
+        folders = [];
+        foldersSnapshot.forEach(doc => {
+          folders.push({ id: doc.id, ...doc.data() });
+        });
+        renderFolders();
 
         renderTags();
         renderGallery();
@@ -2594,6 +3192,490 @@
 
     // Initialize
     checkViewMode();
+
+    // ============== TAB FUNCTIONS ==============
+    function switchTab(tabName) {
+      // Update tab buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`.tab-btn[onclick="switchTab('${tabName}')"]`).classList.add('active');
+      
+      // Update tab content
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      document.getElementById(tabName + 'Tab').classList.add('active');
+      
+      // Update UI permissions for the new tab
+      updateUIForPermissions();
+    }
+
+    // ============== MAP FUNCTIONS ==============
+    function renderMap() {
+      const mapImage = document.getElementById('mapImage');
+      const emptyMapText = document.getElementById('emptyMapText');
+      const mapDescView = document.getElementById('mapDescriptionView');
+      const mapDescInput = document.getElementById('mapDescriptionInput');
+      
+      if (mapData.image) {
+        mapImage.src = mapData.image;
+        mapImage.style.display = 'block';
+        emptyMapText.style.display = 'none';
+      } else {
+        mapImage.style.display = 'none';
+        emptyMapText.style.display = 'block';
+      }
+      
+      if (mapData.description) {
+        mapDescView.innerHTML = marked.parse(mapData.description);
+        if (mapDescInput) mapDescInput.value = mapData.description;
+      } else {
+        mapDescView.innerHTML = '<p class="empty-text">No description added yet.</p>';
+      }
+    }
+
+    // Map image upload handler
+    document.getElementById('mapImageInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file || !isDM) return;
+
+      setSyncStatus('Uploading map...');
+      try {
+        const storageRef = storage.ref(`public/map/barovia-map`);
+        const snapshot = await storageRef.put(file);
+        const downloadURL = await snapshot.ref.getDownloadURL();
+        
+        mapData.image = downloadURL;
+        await db.collection('public').doc('map').set(mapData);
+        renderMap();
+        setSyncStatus('');
+        showToast('Map uploaded successfully!');
+      } catch (error) {
+        console.error('Map upload error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to upload map', true);
+      }
+    });
+
+    async function saveMapDescription() {
+      if (!isDM) return;
+      
+      mapData.description = document.getElementById('mapDescriptionInput').value;
+      setSyncStatus('Saving...');
+      try {
+        await db.collection('public').doc('map').set(mapData);
+        renderMap();
+        setSyncStatus('');
+        showToast('Description saved!');
+      } catch (error) {
+        console.error('Save map desc error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to save description', true);
+      }
+    }
+
+    // ============== QUEST FUNCTIONS ==============
+    function renderQuests() {
+      const questList = document.getElementById('questList');
+      const emptyText = document.getElementById('emptyQuestsText');
+      
+      if (quests.length === 0) {
+        questList.innerHTML = '';
+        emptyText.style.display = 'block';
+        questList.appendChild(emptyText);
+        return;
+      }
+      
+      emptyText.style.display = 'none';
+      
+      // Sort quests: incomplete first, then by date
+      const sortedQuests = [...quests].sort((a, b) => {
+        if (a.completed !== b.completed) return a.completed ? 1 : -1;
+        return (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0);
+      });
+      
+      questList.innerHTML = sortedQuests.map(quest => {
+        const hasProgress = quest.total && quest.total > 0;
+        const progressPercent = hasProgress ? Math.min(100, (quest.current / quest.total) * 100) : 0;
+        const isComplete = hasProgress && quest.current >= quest.total;
+        
+        return `
+          <div class="quest-item ${quest.completed ? 'completed' : ''}" data-id="${quest.id}">
+            <div class="quest-header">
+              <h3 class="quest-title">${quest.completed ? '✅ ' : ''}${quest.title}</h3>
+              <div class="quest-actions" style="display: none;">
+                ${!quest.completed ? `<button class="btn btn-secondary" onclick="completeQuest('${quest.id}')">✓ Complete</button>` : ''}
+                <button class="btn btn-secondary" onclick="openQuestEditModal('${quest.id}')">✏️</button>
+                <button class="btn delete-btn" onclick="deleteQuest('${quest.id}')">🗑️</button>
+              </div>
+            </div>
+            <div class="quest-description markdown-content">${marked.parse(quest.description || '')}</div>
+            ${hasProgress ? `
+              <div class="quest-progress-section">
+                <div class="progress-label">
+                  <span>${quest.progressLabel || 'Progress'}</span>
+                  <span>${quest.current} / ${quest.total}</span>
+                </div>
+                <div class="progress-bar-container">
+                  <div class="progress-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${progressPercent}%">
+                    <span>${Math.round(progressPercent)}%</span>
+                  </div>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+      
+      updateUIForPermissions();
+    }
+
+    async function addQuest() {
+      if (!isDM) return;
+      
+      const title = document.getElementById('questTitleInput').value.trim();
+      const description = document.getElementById('questDescInput').value;
+      const current = parseInt(document.getElementById('questCurrentInput').value) || 0;
+      const total = parseInt(document.getElementById('questTotalInput').value) || 0;
+      const progressLabel = document.getElementById('questProgressLabel').value.trim();
+      
+      if (!title) {
+        showToast('Please enter a quest title', true);
+        return;
+      }
+      
+      const newQuest = {
+        id: Date.now().toString(),
+        title,
+        description,
+        current,
+        total,
+        progressLabel,
+        completed: false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      
+      setSyncStatus('Saving...');
+      try {
+        await db.collection('public').doc('data').collection('quests').doc(newQuest.id).set(newQuest);
+        quests.push(newQuest);
+        renderQuests();
+        
+        // Clear form
+        document.getElementById('questTitleInput').value = '';
+        document.getElementById('questDescInput').value = '';
+        document.getElementById('questCurrentInput').value = '';
+        document.getElementById('questTotalInput').value = '';
+        document.getElementById('questProgressLabel').value = '';
+        
+        setSyncStatus('');
+        showToast('Quest added!');
+      } catch (error) {
+        console.error('Add quest error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to add quest', true);
+      }
+    }
+
+    function openQuestEditModal(id) {
+      currentEditingQuest = quests.find(q => q.id === id);
+      if (!currentEditingQuest) return;
+      
+      document.getElementById('editQuestTitleInput').value = currentEditingQuest.title;
+      document.getElementById('editQuestDescInput').value = currentEditingQuest.description || '';
+      document.getElementById('editQuestCurrentInput').value = currentEditingQuest.current || '';
+      document.getElementById('editQuestTotalInput').value = currentEditingQuest.total || '';
+      document.getElementById('editQuestProgressLabel').value = currentEditingQuest.progressLabel || '';
+      
+      document.getElementById('questEditModal').classList.add('active');
+    }
+
+    function closeQuestEditModal() {
+      document.getElementById('questEditModal').classList.remove('active');
+      currentEditingQuest = null;
+    }
+
+    async function saveQuestEdit() {
+      if (!currentEditingQuest || !isDM) return;
+      
+      currentEditingQuest.title = document.getElementById('editQuestTitleInput').value.trim();
+      currentEditingQuest.description = document.getElementById('editQuestDescInput').value;
+      currentEditingQuest.current = parseInt(document.getElementById('editQuestCurrentInput').value) || 0;
+      currentEditingQuest.total = parseInt(document.getElementById('editQuestTotalInput').value) || 0;
+      currentEditingQuest.progressLabel = document.getElementById('editQuestProgressLabel').value.trim();
+      
+      setSyncStatus('Saving...');
+      try {
+        await db.collection('public').doc('data').collection('quests').doc(currentEditingQuest.id).set(currentEditingQuest);
+        renderQuests();
+        closeQuestEditModal();
+        setSyncStatus('');
+        showToast('Quest updated!');
+      } catch (error) {
+        console.error('Save quest error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to save quest', true);
+      }
+    }
+
+    async function completeQuest(id) {
+      if (!isDM) return;
+      
+      const quest = quests.find(q => q.id === id);
+      if (!quest) return;
+      
+      quest.completed = true;
+      setSyncStatus('Saving...');
+      try {
+        await db.collection('public').doc('data').collection('quests').doc(id).set(quest);
+        renderQuests();
+        setSyncStatus('');
+        showToast('Quest completed!');
+      } catch (error) {
+        console.error('Complete quest error:', error);
+        setSyncStatus('Error', true);
+      }
+    }
+
+    async function deleteQuest(id) {
+      if (!isDM || !confirm('Delete this quest?')) return;
+      
+      setSyncStatus('Deleting...');
+      try {
+        await db.collection('public').doc('data').collection('quests').doc(id).delete();
+        quests = quests.filter(q => q.id !== id);
+        renderQuests();
+        setSyncStatus('');
+        showToast('Quest deleted');
+      } catch (error) {
+        console.error('Delete quest error:', error);
+        setSyncStatus('Error', true);
+      }
+    }
+
+    // ============== DOCUMENTS/FOLDERS FUNCTIONS ==============
+    function renderFolders() {
+      const foldersContainer = document.getElementById('foldersContainer');
+      const emptyText = document.getElementById('emptyFoldersText');
+      
+      if (folders.length === 0) {
+        foldersContainer.innerHTML = '';
+        emptyText.style.display = 'block';
+        foldersContainer.appendChild(emptyText);
+        return;
+      }
+      
+      emptyText.style.display = 'none';
+      
+      foldersContainer.innerHTML = folders.map(folder => `
+        <div class="folder" data-id="${folder.id}">
+          <div class="folder-header" onclick="toggleFolder('${folder.id}')">
+            <span class="folder-title">📁 ${folder.name}</span>
+            <div class="folder-actions" style="display: none;" onclick="event.stopPropagation()">
+              <button class="btn btn-secondary" onclick="deleteFolder('${folder.id}')">🗑️</button>
+            </div>
+            <span class="folder-toggle">▶</span>
+          </div>
+          <div class="folder-content">
+            <div class="document-add-section" style="display: none;">
+              <input type="text" placeholder="Document title..." id="newDocTitle-${folder.id}">
+              <button class="btn btn-primary" onclick="addDocument('${folder.id}')">+ Add Document</button>
+            </div>
+            <div class="documents-list" id="docList-${folder.id}">
+              ${renderDocuments(folder)}
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      updateUIForPermissions();
+    }
+
+    function renderDocuments(folder) {
+      if (!folder.documents || folder.documents.length === 0) {
+        return '<p class="no-documents">No documents in this folder.</p>';
+      }
+      
+      return folder.documents.map(doc => `
+        <div class="document-item" onclick="openDocumentModal('${folder.id}', '${doc.id}')">
+          <div class="document-title">📄 ${doc.title}</div>
+          <div class="document-preview">${doc.content ? doc.content.substring(0, 100) + '...' : 'Empty document'}</div>
+        </div>
+      `).join('');
+    }
+
+    function toggleFolder(id) {
+      const folder = document.querySelector(`.folder[data-id="${id}"]`);
+      folder.classList.toggle('open');
+    }
+
+    async function addFolder() {
+      if (!isDM) return;
+      
+      const name = document.getElementById('newFolderInput').value.trim();
+      if (!name) {
+        showToast('Please enter a folder name', true);
+        return;
+      }
+      
+      const newFolder = {
+        id: Date.now().toString(),
+        name,
+        documents: [],
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      
+      setSyncStatus('Saving...');
+      try {
+        await db.collection('public').doc('data').collection('folders').doc(newFolder.id).set(newFolder);
+        folders.push(newFolder);
+        renderFolders();
+        document.getElementById('newFolderInput').value = '';
+        setSyncStatus('');
+        showToast('Folder created!');
+      } catch (error) {
+        console.error('Add folder error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to create folder', true);
+      }
+    }
+
+    async function deleteFolder(id) {
+      if (!isDM || !confirm('Delete this folder and all its documents?')) return;
+      
+      setSyncStatus('Deleting...');
+      try {
+        await db.collection('public').doc('data').collection('folders').doc(id).delete();
+        folders = folders.filter(f => f.id !== id);
+        renderFolders();
+        setSyncStatus('');
+        showToast('Folder deleted');
+      } catch (error) {
+        console.error('Delete folder error:', error);
+        setSyncStatus('Error', true);
+      }
+    }
+
+    async function addDocument(folderId) {
+      if (!isDM) return;
+      
+      const title = document.getElementById(`newDocTitle-${folderId}`).value.trim();
+      if (!title) {
+        showToast('Please enter a document title', true);
+        return;
+      }
+      
+      const folder = folders.find(f => f.id === folderId);
+      if (!folder) return;
+      
+      const newDoc = {
+        id: Date.now().toString(),
+        title,
+        content: ''
+      };
+      
+      if (!folder.documents) folder.documents = [];
+      folder.documents.push(newDoc);
+      
+      setSyncStatus('Saving...');
+      try {
+        await db.collection('public').doc('data').collection('folders').doc(folderId).set(folder);
+        renderFolders();
+        document.getElementById(`newDocTitle-${folderId}`).value = '';
+        setSyncStatus('');
+        showToast('Document created!');
+        
+        // Open the document for editing
+        openDocumentModal(folderId, newDoc.id);
+      } catch (error) {
+        console.error('Add document error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to create document', true);
+      }
+    }
+
+    function openDocumentModal(folderId, docId) {
+      currentEditingFolder = folders.find(f => f.id === folderId);
+      if (!currentEditingFolder) return;
+      
+      currentEditingDocument = currentEditingFolder.documents.find(d => d.id === docId);
+      if (!currentEditingDocument) return;
+      
+      document.getElementById('documentModalTitle').textContent = currentEditingDocument.title;
+      document.getElementById('documentModalBody').innerHTML = currentEditingDocument.content 
+        ? marked.parse(currentEditingDocument.content)
+        : '<p class="empty-text">This document is empty.</p>';
+      
+      document.getElementById('documentModal').classList.add('active');
+      updateUIForPermissions();
+    }
+
+    function closeDocumentModal() {
+      document.getElementById('documentModal').classList.remove('active');
+      currentEditingDocument = null;
+      currentEditingFolder = null;
+    }
+
+    function editDocument() {
+      if (!currentEditingDocument || !isDM) return;
+      
+      document.getElementById('editDocTitleInput').value = currentEditingDocument.title;
+      document.getElementById('editDocContentInput').value = currentEditingDocument.content || '';
+      
+      closeDocumentModal();
+      document.getElementById('documentEditModal').classList.add('active');
+    }
+
+    function closeDocumentEditModal() {
+      document.getElementById('documentEditModal').classList.remove('active');
+    }
+
+    async function saveDocumentEdit() {
+      if (!currentEditingDocument || !currentEditingFolder || !isDM) return;
+      
+      currentEditingDocument.title = document.getElementById('editDocTitleInput').value.trim();
+      currentEditingDocument.content = document.getElementById('editDocContentInput').value;
+      
+      setSyncStatus('Saving...');
+      try {
+        await db.collection('public').doc('data').collection('folders').doc(currentEditingFolder.id).set(currentEditingFolder);
+        renderFolders();
+        closeDocumentEditModal();
+        setSyncStatus('');
+        showToast('Document saved!');
+      } catch (error) {
+        console.error('Save document error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to save document', true);
+      }
+    }
+
+    async function deleteDocument() {
+      if (!currentEditingDocument || !currentEditingFolder || !isDM) return;
+      if (!confirm('Delete this document?')) return;
+      
+      currentEditingFolder.documents = currentEditingFolder.documents.filter(d => d.id !== currentEditingDocument.id);
+      
+      setSyncStatus('Deleting...');
+      try {
+        await db.collection('public').doc('data').collection('folders').doc(currentEditingFolder.id).set(currentEditingFolder);
+        renderFolders();
+        closeDocumentModal();
+        setSyncStatus('');
+        showToast('Document deleted');
+      } catch (error) {
+        console.error('Delete document error:', error);
+        setSyncStatus('Error', true);
+      }
+    }
+
+    // Close modals on outside click
+    document.getElementById('questEditModal').addEventListener('click', (e) => {
+      if (e.target.id === 'questEditModal') closeQuestEditModal();
+    });
+    document.getElementById('documentModal').addEventListener('click', (e) => {
+      if (e.target.id === 'documentModal') closeDocumentModal();
+    });
+    document.getElementById('documentEditModal').addEventListener('click', (e) => {
+      if (e.target.id === 'documentEditModal') closeDocumentEditModal();
+    });
   </script>
 </body>
 </html>
