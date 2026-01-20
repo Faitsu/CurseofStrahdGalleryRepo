@@ -2285,12 +2285,12 @@
       
       if (isAdmin) {
         if (controls) controls.style.display = 'block';
-        editButtons.forEach(btn => btn.style.display = 'inline-block');
-        titleInputs.forEach(input => input.disabled = false);
+        editButtons.forEach(btn => { if (btn) btn.style.display = 'inline-block'; });
+        titleInputs.forEach(input => { if (input) input.disabled = false; });
       } else {
         if (controls) controls.style.display = 'none';
-        editButtons.forEach(btn => btn.style.display = 'none');
-        titleInputs.forEach(input => input.disabled = true);
+        editButtons.forEach(btn => { if (btn) btn.style.display = 'none'; });
+        titleInputs.forEach(input => { if (input) input.disabled = true; });
       }
       
       // Only show private toggle and publish buttons for DM
@@ -2298,7 +2298,7 @@
         privateToggle.style.display = isDM ? 'flex' : 'none';
       }
       publishBtns.forEach(btn => {
-        btn.style.display = isDM ? 'inline-block' : 'none';
+        if (btn) btn.style.display = isDM ? 'inline-block' : 'none';
       });
       
       // DM controls for other tabs
@@ -2306,10 +2306,10 @@
       if (mapDescControls) mapDescControls.style.display = isDM ? 'flex' : 'none';
       if (questAddControls) questAddControls.style.display = isDM ? 'block' : 'none';
       if (folderAddControls) folderAddControls.style.display = isDM ? 'flex' : 'none';
-      questActionBtns.forEach(el => el.style.display = isDM ? 'flex' : 'none');
-      folderActionBtns.forEach(el => el.style.display = isDM ? 'flex' : 'none');
-      docAddSections.forEach(el => el.style.display = isDM ? 'flex' : 'none');
-      dmOnlyBtns.forEach(btn => btn.style.display = isDM ? 'inline-block' : 'none');
+      questActionBtns.forEach(el => { if (el) el.style.display = isDM ? 'flex' : 'none'; });
+      folderActionBtns.forEach(el => { if (el) el.style.display = isDM ? 'flex' : 'none'; });
+      docAddSections.forEach(el => { if (el) el.style.display = isDM ? 'flex' : 'none'; });
+      dmOnlyBtns.forEach(btn => { if (btn) btn.style.display = isDM ? 'inline-block' : 'none'; });
     }
 
     // Sign in with Google
