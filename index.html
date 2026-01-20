@@ -1326,6 +1326,110 @@
       font-style: italic;
     }
 
+    /* Map Drawing */
+    .map-canvas-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .map-canvas-container img {
+      display: block;
+      max-width: 100%;
+      max-height: 80vh;
+    }
+
+    #mapDrawingCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      cursor: crosshair;
+    }
+
+    #mapDrawingCanvas.drawing-disabled {
+      pointer-events: none;
+    }
+
+    .map-drawing-controls {
+      display: none;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+      padding: 15px;
+      background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+      border: 1px solid #3d1515;
+      border-radius: 4px;
+      align-items: center;
+    }
+
+    .drawing-tool-group {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .drawing-tool-group label {
+      color: #c9a227;
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      margin-bottom: 0;
+      margin-right: 5px;
+    }
+
+    .tool-btn {
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #5a1515;
+      color: #d4c4a8;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tool-btn:hover {
+      border-color: #8b0000;
+      background: rgba(139, 0, 0, 0.2);
+    }
+
+    .tool-btn.active {
+      border-color: #c9a227;
+      background: rgba(201, 162, 39, 0.2);
+      color: #c9a227;
+    }
+
+    .color-picker-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .color-picker-wrapper input[type="color"] {
+      width: 35px;
+      height: 35px;
+      padding: 0;
+      border: 2px solid #5a1515;
+      border-radius: 4px;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    .brush-size-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brush-size-wrapper input[type="range"] {
+      width: 80px;
+      cursor: pointer;
+    }
+
+    .brush-size-preview {
+      width: 30px;
+      text-align: center;
+      color: #d4c4a8;
+      font-size: 0.85rem;
+    }
+
     .dm-controls {
       margin-top: 15px;
       display: flex;
@@ -1654,12 +1758,38 @@
       background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
       border: 2px solid #3d1515;
       border-radius: 4px;
-      overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    }
+
+    .folder.dragging {
+      opacity: 0.5;
+      transform: scale(0.98);
+    }
+
+    .folder.drag-over {
+      border-color: #c9a227;
+      box-shadow: 0 0 10px rgba(201, 162, 39, 0.5);
+    }
+
+    .folder-drag-handle {
+      cursor: grab;
+      padding: 0 10px;
+      color: #5a1515;
+      font-size: 1.2rem;
+      display: none;
+      user-select: none;
+    }
+
+    .folder-drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .folder-drag-handle:hover {
+      color: #c9a227;
     }
 
     .folder-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
       padding: 15px 20px;
       background: rgba(139, 0, 0, 0.2);
@@ -1678,6 +1808,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      flex: 1;
     }
 
     .folder-toggle {
@@ -1741,12 +1872,47 @@
       border-radius: 4px;
       padding: 15px;
       cursor: pointer;
-      transition: all 0.3s;
+      transition: all 0.2s;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
     }
 
     .document-item:hover {
       border-color: #8b0000;
       background: rgba(139, 0, 0, 0.1);
+    }
+
+    .document-item.dragging {
+      opacity: 0.5;
+      transform: scale(0.98);
+    }
+
+    .document-item.drag-over {
+      border-color: #c9a227;
+      box-shadow: 0 0 8px rgba(201, 162, 39, 0.5);
+    }
+
+    .doc-drag-handle {
+      cursor: grab;
+      color: #5a1515;
+      font-size: 1rem;
+      display: none;
+      user-select: none;
+      padding: 2px 0;
+    }
+
+    .doc-drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .doc-drag-handle:hover {
+      color: #c9a227;
+    }
+
+    .document-info {
+      flex: 1;
+      min-width: 0;
     }
 
     .document-title {
@@ -2275,11 +2441,47 @@
       <div class="tab-content" id="mapTab">
         <h2 class="tab-title">Map of Barovia</h2>
         
+        <!-- Drawing Controls (DM only) -->
+        <div class="map-drawing-controls" id="mapDrawingControls">
+          <div class="drawing-tool-group">
+            <label>Tool:</label>
+            <button class="tool-btn active" data-tool="pen" onclick="setDrawingTool('pen')">✏️ Pen</button>
+            <button class="tool-btn" data-tool="line" onclick="setDrawingTool('line')">📏 Line</button>
+            <button class="tool-btn" data-tool="circle" onclick="setDrawingTool('circle')">⭕ Circle</button>
+            <button class="tool-btn" data-tool="arrow" onclick="setDrawingTool('arrow')">➡️ Arrow</button>
+            <button class="tool-btn" data-tool="eraser" onclick="setDrawingTool('eraser')">🧹 Eraser</button>
+          </div>
+          <div class="drawing-tool-group color-picker-wrapper">
+            <label>Color:</label>
+            <input type="color" id="drawingColor" value="#ff0000" onchange="setDrawingColor(this.value)">
+          </div>
+          <div class="drawing-tool-group brush-size-wrapper">
+            <label>Size:</label>
+            <input type="range" id="brushSize" min="1" max="20" value="3" oninput="setBrushSize(this.value)">
+            <span class="brush-size-preview" id="brushSizePreview">3</span>
+          </div>
+          <div class="drawing-tool-group">
+            <button class="btn btn-secondary" onclick="undoDrawing()">↩️ Undo</button>
+            <button class="btn btn-secondary" onclick="clearDrawing()">🗑️ Clear All</button>
+            <button class="btn btn-primary" onclick="saveMapDrawing()">💾 Save Drawing</button>
+          </div>
+          <div class="drawing-tool-group">
+            <label class="toggle-label" style="margin: 0;">
+              <input type="checkbox" id="drawingModeToggle" onchange="toggleDrawingMode(this.checked)">
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">Drawing Mode</span>
+            </label>
+          </div>
+        </div>
+        
         <div class="map-container">
           <div class="map-image-section">
             <div class="map-image-wrapper" id="mapImageWrapper">
               <p class="empty-map-text" id="emptyMapText">No map uploaded yet</p>
-              <img id="mapImage" src="" alt="Map of Barovia" style="display: none;">
+              <div class="map-canvas-container" id="mapCanvasContainer" style="display: none;">
+                <img id="mapImage" src="" alt="Map of Barovia">
+                <canvas id="mapDrawingCanvas"></canvas>
+              </div>
             </div>
             <div class="dm-controls" id="mapControls" style="display: none;">
               <label class="btn btn-primary" for="mapImageInput">📁 Upload Map Image</label>
@@ -2705,6 +2907,16 @@
       // Drag handles for quests (only visible to DM)
       const dragHandles = document.querySelectorAll('.drag-handle');
       dragHandles.forEach(el => { if (el) el.style.display = isDM ? 'block' : 'none'; });
+      
+      // Drag handles for folders and documents (only visible to DM)
+      const folderDragHandles = document.querySelectorAll('.folder-drag-handle');
+      folderDragHandles.forEach(el => { if (el) el.style.display = isDM ? 'block' : 'none'; });
+      const docDragHandles = document.querySelectorAll('.doc-drag-handle');
+      docDragHandles.forEach(el => { if (el) el.style.display = isDM ? 'block' : 'none'; });
+      
+      // Map drawing controls (only visible to DM)
+      const mapDrawingControls = document.getElementById('mapDrawingControls');
+      if (mapDrawingControls) mapDrawingControls.style.display = isDM ? 'flex' : 'none';
       
       // DM Notes sections (only visible to DM)
       const dmNotesSections = document.querySelectorAll('.dm-notes-section');
@@ -3639,15 +3851,25 @@
     function renderMap() {
       const mapImage = document.getElementById('mapImage');
       const emptyMapText = document.getElementById('emptyMapText');
+      const mapCanvasContainer = document.getElementById('mapCanvasContainer');
       const mapDescView = document.getElementById('mapDescriptionView');
       const mapDescInput = document.getElementById('mapDescriptionInput');
       
       if (mapData.image) {
         mapImage.src = mapData.image;
-        mapImage.style.display = 'block';
+        mapCanvasContainer.style.display = 'inline-block';
         emptyMapText.style.display = 'none';
+        
+        // Setup canvas once image loads
+        mapImage.onload = function() {
+          setupMapCanvas();
+          // Load saved drawing if exists
+          if (mapData.drawing) {
+            loadMapDrawing(mapData.drawing);
+          }
+        };
       } else {
-        mapImage.style.display = 'none';
+        mapCanvasContainer.style.display = 'none';
         emptyMapText.style.display = 'block';
       }
       
@@ -3656,6 +3878,245 @@
         if (mapDescInput) mapDescInput.value = mapData.description;
       } else {
         mapDescView.innerHTML = '<p class="empty-text">No description added yet.</p>';
+      }
+    }
+
+    // ============== MAP DRAWING FUNCTIONS ==============
+    let mapCanvas, mapCtx;
+    let isDrawing = false;
+    let drawingEnabled = false;
+    let currentTool = 'pen';
+    let currentColor = '#ff0000';
+    let brushSize = 3;
+    let drawingHistory = [];
+    let startX, startY;
+
+    function setupMapCanvas() {
+      const mapImage = document.getElementById('mapImage');
+      mapCanvas = document.getElementById('mapDrawingCanvas');
+      
+      if (!mapCanvas || !mapImage) return;
+      
+      mapCanvas.width = mapImage.naturalWidth || mapImage.width;
+      mapCanvas.height = mapImage.naturalHeight || mapImage.height;
+      mapCanvas.style.width = mapImage.width + 'px';
+      mapCanvas.style.height = mapImage.height + 'px';
+      
+      mapCtx = mapCanvas.getContext('2d');
+      mapCtx.lineCap = 'round';
+      mapCtx.lineJoin = 'round';
+      
+      // Add event listeners
+      mapCanvas.addEventListener('mousedown', startDrawing);
+      mapCanvas.addEventListener('mousemove', draw);
+      mapCanvas.addEventListener('mouseup', stopDrawing);
+      mapCanvas.addEventListener('mouseout', stopDrawing);
+      
+      // Touch support
+      mapCanvas.addEventListener('touchstart', handleTouchStart);
+      mapCanvas.addEventListener('touchmove', handleTouchMove);
+      mapCanvas.addEventListener('touchend', stopDrawing);
+      
+      // Initially disable drawing
+      mapCanvas.classList.add('drawing-disabled');
+    }
+
+    function toggleDrawingMode(enabled) {
+      drawingEnabled = enabled;
+      const canvas = document.getElementById('mapDrawingCanvas');
+      if (canvas) {
+        canvas.classList.toggle('drawing-disabled', !enabled);
+      }
+    }
+
+    function setDrawingTool(tool) {
+      currentTool = tool;
+      document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tool === tool);
+      });
+    }
+
+    function setDrawingColor(color) {
+      currentColor = color;
+    }
+
+    function setBrushSize(size) {
+      brushSize = parseInt(size);
+      document.getElementById('brushSizePreview').textContent = size;
+    }
+
+    function getCanvasCoords(e) {
+      const rect = mapCanvas.getBoundingClientRect();
+      const scaleX = mapCanvas.width / rect.width;
+      const scaleY = mapCanvas.height / rect.height;
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    }
+
+    function startDrawing(e) {
+      if (!drawingEnabled || !isDM) return;
+      
+      isDrawing = true;
+      const coords = getCanvasCoords(e);
+      startX = coords.x;
+      startY = coords.y;
+      
+      if (currentTool === 'pen' || currentTool === 'eraser') {
+        mapCtx.beginPath();
+        mapCtx.moveTo(startX, startY);
+      }
+      
+      // Save state for undo
+      saveDrawingState();
+    }
+
+    function draw(e) {
+      if (!isDrawing || !drawingEnabled || !isDM) return;
+      
+      const coords = getCanvasCoords(e);
+      
+      if (currentTool === 'pen') {
+        mapCtx.strokeStyle = currentColor;
+        mapCtx.lineWidth = brushSize;
+        mapCtx.lineTo(coords.x, coords.y);
+        mapCtx.stroke();
+      } else if (currentTool === 'eraser') {
+        mapCtx.strokeStyle = 'rgba(0,0,0,1)';
+        mapCtx.lineWidth = brushSize * 3;
+        mapCtx.globalCompositeOperation = 'destination-out';
+        mapCtx.lineTo(coords.x, coords.y);
+        mapCtx.stroke();
+        mapCtx.globalCompositeOperation = 'source-over';
+      }
+    }
+
+    function stopDrawing(e) {
+      if (!isDrawing) return;
+      
+      if (currentTool === 'line' || currentTool === 'circle' || currentTool === 'arrow') {
+        const coords = getCanvasCoords(e);
+        drawShape(startX, startY, coords.x, coords.y);
+      }
+      
+      isDrawing = false;
+      mapCtx.beginPath();
+    }
+
+    function drawShape(x1, y1, x2, y2) {
+      mapCtx.strokeStyle = currentColor;
+      mapCtx.lineWidth = brushSize;
+      mapCtx.beginPath();
+      
+      if (currentTool === 'line') {
+        mapCtx.moveTo(x1, y1);
+        mapCtx.lineTo(x2, y2);
+        mapCtx.stroke();
+      } else if (currentTool === 'circle') {
+        const radius = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        mapCtx.arc(x1, y1, radius, 0, Math.PI * 2);
+        mapCtx.stroke();
+      } else if (currentTool === 'arrow') {
+        // Draw line
+        mapCtx.moveTo(x1, y1);
+        mapCtx.lineTo(x2, y2);
+        mapCtx.stroke();
+        
+        // Draw arrowhead
+        const angle = Math.atan2(y2 - y1, x2 - x1);
+        const headLength = 15 + brushSize * 2;
+        
+        mapCtx.beginPath();
+        mapCtx.moveTo(x2, y2);
+        mapCtx.lineTo(
+          x2 - headLength * Math.cos(angle - Math.PI / 6),
+          y2 - headLength * Math.sin(angle - Math.PI / 6)
+        );
+        mapCtx.moveTo(x2, y2);
+        mapCtx.lineTo(
+          x2 - headLength * Math.cos(angle + Math.PI / 6),
+          y2 - headLength * Math.sin(angle + Math.PI / 6)
+        );
+        mapCtx.stroke();
+      }
+    }
+
+    // Touch support
+    function handleTouchStart(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const mouseEvent = new MouseEvent('mousedown', {
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      });
+      startDrawing(mouseEvent);
+    }
+
+    function handleTouchMove(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const mouseEvent = new MouseEvent('mousemove', {
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      });
+      draw(mouseEvent);
+    }
+
+    function saveDrawingState() {
+      if (mapCanvas) {
+        drawingHistory.push(mapCanvas.toDataURL());
+        // Limit history to 20 states
+        if (drawingHistory.length > 20) {
+          drawingHistory.shift();
+        }
+      }
+    }
+
+    function undoDrawing() {
+      if (drawingHistory.length > 1) {
+        drawingHistory.pop(); // Remove current state
+        const previousState = drawingHistory[drawingHistory.length - 1];
+        loadMapDrawing(previousState);
+      } else if (drawingHistory.length === 1) {
+        drawingHistory.pop();
+        mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+      }
+    }
+
+    function clearDrawing() {
+      if (!confirm('Clear all drawings from the map?')) return;
+      
+      mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+      drawingHistory = [];
+    }
+
+    function loadMapDrawing(dataURL) {
+      if (!mapCtx || !dataURL) return;
+      
+      const img = new Image();
+      img.onload = function() {
+        mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+        mapCtx.drawImage(img, 0, 0);
+      };
+      img.src = dataURL;
+    }
+
+    async function saveMapDrawing() {
+      if (!isDM || !mapCanvas) return;
+      
+      const drawingData = mapCanvas.toDataURL();
+      mapData.drawing = drawingData;
+      
+      setSyncStatus('Saving drawing...');
+      try {
+        await db.collection('public').doc('map').set(mapData);
+        setSyncStatus('');
+        showToast('Drawing saved!');
+      } catch (error) {
+        console.error('Save drawing error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to save drawing: ' + error.message, true);
       }
     }
 
@@ -3673,6 +4134,7 @@
           const downloadURL = await snapshot.ref.getDownloadURL();
           
           mapData.image = downloadURL;
+          mapData.drawing = ''; // Clear drawing when new map is uploaded
           await db.collection('public').doc('map').set(mapData);
           renderMap();
           setSyncStatus('');
@@ -4143,6 +4605,7 @@
       foldersContainer.innerHTML = rootFolders.map(folder => renderFolderHTML(folder, 0, sortOrder)).join('');
       
       updateUIForPermissions();
+      setupFolderDragAndDrop();
     }
     
     function sortFolders(folderList, sortOrder) {
@@ -4166,10 +4629,12 @@
       let subfolders = folders.filter(f => f.parentId === folder.id);
       subfolders = sortFolders(subfolders, sortOrder);
       const indent = level * 20;
+      const isRootLevel = level === 0;
       
       return `
-        <div class="folder" data-id="${folder.id}" style="margin-left: ${indent}px;">
+        <div class="folder" data-id="${folder.id}" data-parent="${folder.parentId || ''}" style="margin-left: ${indent}px;" draggable="true">
           <div class="folder-header" onclick="toggleFolder('${folder.id}')">
+            <span class="folder-drag-handle" onclick="event.stopPropagation()">⋮⋮</span>
             <span class="folder-title">📁 ${folder.name}</span>
             <div class="folder-actions" style="display: none;" onclick="event.stopPropagation()">
               <button class="btn btn-secondary" onclick="editFolderName('${folder.id}')" title="Rename">✏️</button>
@@ -4186,7 +4651,7 @@
                 <button class="btn btn-primary" onclick="addDocument('${folder.id}')">+ Add Document</button>
               </div>
             </div>
-            <div class="documents-list" id="docList-${folder.id}">
+            <div class="documents-list" id="docList-${folder.id}" data-folder-id="${folder.id}">
               ${renderDocuments(folder)}
             </div>
             ${subfolders.map(sf => renderFolderHTML(sf, level + 1, sortOrder)).join('')}
@@ -4200,10 +4665,13 @@
         return '<p class="no-documents">No documents in this folder.</p>';
       }
       
-      return folder.documents.map(doc => `
-        <div class="document-item" onclick="openDocumentModal('${folder.id}', '${doc.id}')">
-          <div class="document-title">📄 ${doc.title}</div>
-          <div class="document-preview">${doc.content ? doc.content.substring(0, 100) + '...' : 'Empty document'}</div>
+      return folder.documents.map((doc, index) => `
+        <div class="document-item" data-doc-id="${doc.id}" data-folder-id="${folder.id}" data-index="${index}" draggable="true">
+          <span class="doc-drag-handle" onclick="event.stopPropagation()">⋮⋮</span>
+          <div class="document-info" onclick="openDocumentModal('${folder.id}', '${doc.id}')">
+            <div class="document-title">📄 ${doc.title}</div>
+            <div class="document-preview">${doc.content ? doc.content.substring(0, 100) + '...' : 'Empty document'}</div>
+          </div>
         </div>
       `).join('');
     }
@@ -4211,6 +4679,211 @@
     function toggleFolder(id) {
       const folder = document.querySelector(`.folder[data-id="${id}"]`);
       if (folder) folder.classList.toggle('open');
+    }
+
+    // Setup drag and drop for folders and documents
+    function setupFolderDragAndDrop() {
+      if (!isDM) return;
+      
+      // Folder drag and drop
+      const folderItems = document.querySelectorAll('.folder[draggable="true"]');
+      folderItems.forEach(item => {
+        item.addEventListener('dragstart', handleFolderDragStart);
+        item.addEventListener('dragend', handleFolderDragEnd);
+        item.addEventListener('dragover', handleFolderDragOver);
+        item.addEventListener('dragleave', handleFolderDragLeave);
+        item.addEventListener('drop', handleFolderDrop);
+      });
+      
+      // Document drag and drop
+      const docItems = document.querySelectorAll('.document-item[draggable="true"]');
+      docItems.forEach(item => {
+        item.addEventListener('dragstart', handleDocDragStart);
+        item.addEventListener('dragend', handleDocDragEnd);
+        item.addEventListener('dragover', handleDocDragOver);
+        item.addEventListener('dragleave', handleDocDragLeave);
+        item.addEventListener('drop', handleDocDrop);
+      });
+    }
+
+    let draggedFolderId = null;
+    let draggedDocInfo = null;
+
+    function handleFolderDragStart(e) {
+      draggedFolderId = this.dataset.id;
+      this.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', 'folder:' + this.dataset.id);
+      e.stopPropagation();
+    }
+
+    function handleFolderDragEnd() {
+      this.classList.remove('dragging');
+      draggedFolderId = null;
+      document.querySelectorAll('.folder.drag-over').forEach(el => el.classList.remove('drag-over'));
+    }
+
+    function handleFolderDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (this.dataset.id !== draggedFolderId) {
+        this.classList.add('drag-over');
+      }
+    }
+
+    function handleFolderDragLeave(e) {
+      e.stopPropagation();
+      this.classList.remove('drag-over');
+    }
+
+    async function handleFolderDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.classList.remove('drag-over');
+      
+      const data = e.dataTransfer.getData('text/plain');
+      if (!data.startsWith('folder:')) return;
+      
+      const draggedId = data.replace('folder:', '');
+      const targetId = this.dataset.id;
+      
+      if (draggedId && targetId && draggedId !== targetId) {
+        await reorderFolders(draggedId, targetId);
+      }
+    }
+
+    function handleDocDragStart(e) {
+      draggedDocInfo = {
+        docId: this.dataset.docId,
+        folderId: this.dataset.folderId,
+        index: parseInt(this.dataset.index)
+      };
+      this.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', 'doc:' + JSON.stringify(draggedDocInfo));
+      e.stopPropagation();
+    }
+
+    function handleDocDragEnd() {
+      this.classList.remove('dragging');
+      draggedDocInfo = null;
+      document.querySelectorAll('.document-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+    }
+
+    function handleDocDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!draggedDocInfo || this.dataset.docId !== draggedDocInfo.docId) {
+        this.classList.add('drag-over');
+      }
+    }
+
+    function handleDocDragLeave(e) {
+      e.stopPropagation();
+      this.classList.remove('drag-over');
+    }
+
+    async function handleDocDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      this.classList.remove('drag-over');
+      
+      const data = e.dataTransfer.getData('text/plain');
+      if (!data.startsWith('doc:')) return;
+      
+      const draggedInfo = JSON.parse(data.replace('doc:', ''));
+      const targetFolderId = this.dataset.folderId;
+      const targetDocId = this.dataset.docId;
+      
+      if (draggedInfo.docId !== targetDocId) {
+        await reorderDocuments(draggedInfo, targetFolderId, targetDocId);
+      }
+    }
+
+    async function reorderFolders(draggedId, targetId) {
+      if (!isDM) return;
+      
+      const draggedFolder = folders.find(f => f.id === draggedId);
+      const targetFolder = folders.find(f => f.id === targetId);
+      
+      if (!draggedFolder || !targetFolder) return;
+      
+      // Only reorder folders at the same level (same parent)
+      if (draggedFolder.parentId !== targetFolder.parentId) {
+        showToast('Can only reorder folders at the same level', true);
+        return;
+      }
+      
+      // Get siblings and reorder
+      const siblings = folders.filter(f => f.parentId === draggedFolder.parentId);
+      const draggedIndex = siblings.findIndex(f => f.id === draggedId);
+      const targetIndex = siblings.findIndex(f => f.id === targetId);
+      
+      if (draggedIndex === -1 || targetIndex === -1) return;
+      
+      // Update order values
+      siblings.forEach((folder, idx) => {
+        folder.order = folder.order !== undefined ? folder.order : idx;
+      });
+      
+      // Remove and insert
+      const [removed] = siblings.splice(draggedIndex, 1);
+      siblings.splice(targetIndex, 0, removed);
+      
+      // Reassign orders
+      siblings.forEach((folder, idx) => {
+        folder.order = idx;
+      });
+      
+      setSyncStatus('Saving...');
+      try {
+        const batch = db.batch();
+        siblings.forEach(folder => {
+          const ref = db.collection('public').doc('data').collection('folders').doc(folder.id);
+          batch.set(ref, folder);
+        });
+        await batch.commit();
+        
+        renderFolders();
+        setSyncStatus('');
+      } catch (error) {
+        console.error('Reorder folders error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to reorder: ' + error.message, true);
+      }
+    }
+
+    async function reorderDocuments(draggedInfo, targetFolderId, targetDocId) {
+      if (!isDM) return;
+      
+      // For now, only support reordering within the same folder
+      if (draggedInfo.folderId !== targetFolderId) {
+        showToast('Can only reorder documents within the same folder', true);
+        return;
+      }
+      
+      const folder = folders.find(f => f.id === targetFolderId);
+      if (!folder || !folder.documents) return;
+      
+      const draggedIndex = folder.documents.findIndex(d => d.id === draggedInfo.docId);
+      const targetIndex = folder.documents.findIndex(d => d.id === targetDocId);
+      
+      if (draggedIndex === -1 || targetIndex === -1) return;
+      
+      // Remove and insert
+      const [removed] = folder.documents.splice(draggedIndex, 1);
+      folder.documents.splice(targetIndex, 0, removed);
+      
+      setSyncStatus('Saving...');
+      try {
+        await db.collection('public').doc('data').collection('folders').doc(folder.id).set(folder);
+        renderFolders();
+        setSyncStatus('');
+      } catch (error) {
+        console.error('Reorder documents error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to reorder: ' + error.message, true);
+      }
     }
 
     async function addFolder(parentId = null) {
