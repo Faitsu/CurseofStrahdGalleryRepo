@@ -1786,6 +1786,62 @@
       margin-top: 15px;
     }
 
+    /* Move Buttons */
+    .move-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-right: 10px;
+    }
+
+    .btn-move {
+      padding: 2px 8px;
+      font-size: 0.7rem;
+      background: rgba(139, 0, 0, 0.3);
+      border: 1px solid #5a1515;
+      color: #c9a227;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all 0.2s;
+    }
+
+    .btn-move:hover:not(:disabled) {
+      background: rgba(139, 0, 0, 0.5);
+      border-color: #c9a227;
+    }
+
+    .btn-move:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* Folder Sort Controls */
+    .folder-sort-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 15px;
+      padding: 10px 15px;
+      background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+      border: 1px solid #3d1515;
+      border-radius: 4px;
+    }
+
+    .folder-sort-section label {
+      color: #c9a227;
+      font-family: 'Cinzel', serif;
+      margin-bottom: 0;
+    }
+
+    .folder-sort-section select {
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid #5a1515;
+      border-radius: 4px;
+      color: #d4c4a8;
+      font-family: 'Crimson Text', serif;
+    }
+
     /* Search and Sort Section */
     .search-sort-section {
       background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
@@ -2160,6 +2216,16 @@
           <input type="text" id="newFolderParent" placeholder="Parent folder ID (optional)" style="display: none;">
         </div>
         
+        <div class="folder-sort-section">
+          <label>Sort folders by:</label>
+          <select id="folderSortSelect" onchange="renderFolders()">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="alpha-asc">Alphabetical (A-Z)</option>
+            <option value="alpha-desc">Alphabetical (Z-A)</option>
+          </select>
+        </div>
+        
         <div class="folders-container" id="foldersContainer">
           <p class="empty-text" id="emptyFoldersText">No folders yet.</p>
         </div>
@@ -2504,6 +2570,10 @@
       folderActionBtns.forEach(el => { if (el) el.style.display = isDM ? 'flex' : 'none'; });
       docAddSections.forEach(el => { if (el) el.style.display = isDM ? 'flex' : 'none'; });
       dmOnlyBtns.forEach(btn => { if (btn) btn.style.display = isDM ? 'inline-block' : 'none'; });
+      
+      // Move buttons for quests (only visible to DM)
+      const moveBtns = document.querySelectorAll('.move-buttons');
+      moveBtns.forEach(el => { if (el) el.style.display = isDM ? 'flex' : 'none'; });
       
       // DM Notes sections (only visible to DM)
       const dmNotesSections = document.querySelectorAll('.dm-notes-section');
@@ -3515,18 +3585,25 @@
       
       if (emptyText) emptyText.style.display = 'none';
       
-      // Sort: incomplete first, then trackers, then by date
+      // Sort by order field (lower = higher in list), then by date as fallback
       const sortedQuests = [...quests].sort((a, b) => {
+        // Completed items always go to bottom
         if (a.completed !== b.completed) return a.completed ? 1 : -1;
-        if (a.type !== b.type) return a.type === 'tracker' ? 1 : -1;
+        // Then sort by order field
+        const orderA = a.order !== undefined ? a.order : 999999;
+        const orderB = b.order !== undefined ? b.order : 999999;
+        if (orderA !== orderB) return orderA - orderB;
+        // Fallback to date
         return (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0);
       });
       
-      questList.innerHTML = sortedQuests.map(quest => {
+      questList.innerHTML = sortedQuests.map((quest, index) => {
         const isTracker = quest.type === 'tracker';
         const hasProgress = quest.total && quest.total > 0;
         const progressPercent = hasProgress ? Math.min(100, (quest.current / quest.total) * 100) : 0;
         const isComplete = hasProgress && quest.current >= quest.total;
+        const isFirst = index === 0 || sortedQuests[index - 1]?.completed;
+        const isLast = index === sortedQuests.length - 1 || sortedQuests[index + 1]?.completed;
         
         const dmNotesHtml = `
           <div class="dm-notes-section quest-dm-notes" data-quest-id="${quest.id}" style="display: none;">
@@ -3544,11 +3621,19 @@
           </div>
         `;
         
+        const moveButtons = !quest.completed ? `
+          <div class="move-buttons" style="display: none;">
+            <button class="btn btn-move" onclick="moveQuest('${quest.id}', 'up')" ${isFirst ? 'disabled' : ''} title="Move Up">▲</button>
+            <button class="btn btn-move" onclick="moveQuest('${quest.id}', 'down')" ${isLast ? 'disabled' : ''} title="Move Down">▼</button>
+          </div>
+        ` : '';
+        
         if (isTracker) {
           // Tracker: just title and progress bar
           return `
             <div class="quest-item tracker ${quest.completed ? 'completed' : ''}" data-id="${quest.id}">
               <div class="quest-header">
+                ${moveButtons}
                 <h3 class="quest-title">${quest.completed ? '✅ ' : '📊 '}${quest.title}</h3>
                 <div class="quest-actions" style="display: none;">
                   ${!quest.completed && isComplete ? `<button class="btn btn-secondary" onclick="completeQuest('${quest.id}')">✓ Complete</button>` : ''}
@@ -3577,6 +3662,7 @@
           return `
             <div class="quest-item ${quest.completed ? 'completed' : ''}" data-id="${quest.id}">
               <div class="quest-header">
+                ${moveButtons}
                 <h3 class="quest-title">${quest.completed ? '✅ ' : '⚔️ '}${quest.title}</h3>
                 <div class="quest-actions" style="display: none;">
                   ${!quest.completed ? `<button class="btn btn-secondary" onclick="completeQuest('${quest.id}')">✓ Complete</button>` : ''}
@@ -3775,15 +3861,74 @@
       }
     }
 
+    // Move quest up or down in the list
+    async function moveQuest(questId, direction) {
+      if (!isDM) return;
+      
+      // Get non-completed quests sorted by order
+      const activeQuests = quests
+        .filter(q => !q.completed)
+        .sort((a, b) => {
+          const orderA = a.order !== undefined ? a.order : 999999;
+          const orderB = b.order !== undefined ? b.order : 999999;
+          if (orderA !== orderB) return orderA - orderB;
+          return (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0);
+        });
+      
+      const currentIndex = activeQuests.findIndex(q => q.id === questId);
+      if (currentIndex === -1) return;
+      
+      const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      if (targetIndex < 0 || targetIndex >= activeQuests.length) return;
+      
+      // Swap order values
+      const currentQuest = activeQuests[currentIndex];
+      const targetQuest = activeQuests[targetIndex];
+      
+      // Assign order values if they don't exist
+      if (currentQuest.order === undefined) currentQuest.order = currentIndex;
+      if (targetQuest.order === undefined) targetQuest.order = targetIndex;
+      
+      // Swap
+      const tempOrder = currentQuest.order;
+      currentQuest.order = targetQuest.order;
+      targetQuest.order = tempOrder;
+      
+      setSyncStatus('Saving...');
+      try {
+        // Save both quests
+        await db.collection('public').doc('data').collection('quests').doc(currentQuest.id).set(currentQuest);
+        await db.collection('public').doc('data').collection('quests').doc(targetQuest.id).set(targetQuest);
+        
+        // Update local array
+        const currentLocalIndex = quests.findIndex(q => q.id === currentQuest.id);
+        const targetLocalIndex = quests.findIndex(q => q.id === targetQuest.id);
+        if (currentLocalIndex !== -1) quests[currentLocalIndex] = {...currentQuest};
+        if (targetLocalIndex !== -1) quests[targetLocalIndex] = {...targetQuest};
+        
+        renderQuests();
+        setSyncStatus('');
+      } catch (error) {
+        console.error('Move quest error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to move quest: ' + error.message, true);
+      }
+    }
+
     // ============== DOCUMENTS/FOLDERS FUNCTIONS ==============
     function renderFolders(parentId = null, level = 0) {
       const foldersContainer = document.getElementById('foldersContainer');
       const emptyText = document.getElementById('emptyFoldersText');
+      const sortSelect = document.getElementById('folderSortSelect');
+      const sortOrder = sortSelect ? sortSelect.value : 'newest';
       
       if (!foldersContainer) return;
       
       // Get root level folders
-      const rootFolders = folders.filter(f => !f.parentId);
+      let rootFolders = folders.filter(f => !f.parentId);
+      
+      // Sort folders
+      rootFolders = sortFolders(rootFolders, sortOrder);
       
       if (rootFolders.length === 0) {
         foldersContainer.innerHTML = '<p class="empty-text" id="emptyFoldersText">No folders yet.</p>';
@@ -3791,13 +3936,31 @@
       }
       
       if (emptyText) emptyText.style.display = 'none';
-      foldersContainer.innerHTML = rootFolders.map(folder => renderFolderHTML(folder, 0)).join('');
+      foldersContainer.innerHTML = rootFolders.map(folder => renderFolderHTML(folder, 0, sortOrder)).join('');
       
       updateUIForPermissions();
     }
+    
+    function sortFolders(folderList, sortOrder) {
+      return [...folderList].sort((a, b) => {
+        switch (sortOrder) {
+          case 'newest':
+            return (b.createdAt?.toDate?.() || new Date(parseInt(b.id))) - (a.createdAt?.toDate?.() || new Date(parseInt(a.id)));
+          case 'oldest':
+            return (a.createdAt?.toDate?.() || new Date(parseInt(a.id))) - (b.createdAt?.toDate?.() || new Date(parseInt(b.id)));
+          case 'alpha-asc':
+            return a.name.localeCompare(b.name);
+          case 'alpha-desc':
+            return b.name.localeCompare(a.name);
+          default:
+            return 0;
+        }
+      });
+    }
 
-    function renderFolderHTML(folder, level) {
-      const subfolders = folders.filter(f => f.parentId === folder.id);
+    function renderFolderHTML(folder, level, sortOrder = 'newest') {
+      let subfolders = folders.filter(f => f.parentId === folder.id);
+      subfolders = sortFolders(subfolders, sortOrder);
       const indent = level * 20;
       
       return `
@@ -3822,7 +3985,7 @@
             <div class="documents-list" id="docList-${folder.id}">
               ${renderDocuments(folder)}
             </div>
-            ${subfolders.map(sf => renderFolderHTML(sf, level + 1)).join('')}
+            ${subfolders.map(sf => renderFolderHTML(sf, level + 1, sortOrder)).join('')}
           </div>
         </div>
       `;
