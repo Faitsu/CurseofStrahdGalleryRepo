@@ -662,6 +662,23 @@
       border-top: 1px solid #3d1515;
     }
 
+    .gallery-item .title-display {
+      width: 100%;
+      background: transparent;
+      color: #c9a227;
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding: 5px 8px;
+      border-radius: 3px;
+      text-align: center;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 1px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      hyphens: auto;
+      line-height: 1.3;
+    }
+
     .gallery-item .title-input {
       width: 100%;
       background: transparent;
@@ -675,23 +692,21 @@
       transition: all 0.3s;
       font-family: 'Cinzel', serif;
       letter-spacing: 1px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      resize: none;
+      min-height: 2em;
+      field-sizing: content;
     }
 
     .gallery-item .title-input:hover {
       border-color: #3d1515;
-      white-space: normal;
-      word-wrap: break-word;
     }
 
     .gallery-item .title-input:focus {
       outline: none;
       border-color: #8b0000;
       background: rgba(139, 0, 0, 0.1);
-      white-space: normal;
-      word-wrap: break-word;
     }
 
     .gallery-item .item-tags {
@@ -1135,6 +1150,94 @@
       width: 8px;
     }
 
+    /* Private Toggle */
+    .private-toggle-container {
+      display: flex;
+      align-items: center;
+      padding: 10px 0;
+    }
+
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .toggle-label input {
+      display: none;
+    }
+
+    .toggle-slider {
+      width: 44px;
+      height: 24px;
+      background: rgba(139, 0, 0, 0.3);
+      border: 1px solid #5a1515;
+      border-radius: 12px;
+      position: relative;
+      transition: all 0.3s;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: #d4c4a8;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: all 0.3s;
+    }
+
+    .toggle-label input:checked + .toggle-slider {
+      background: rgba(201, 162, 39, 0.5);
+      border-color: #c9a227;
+    }
+
+    .toggle-label input:checked + .toggle-slider::before {
+      transform: translateX(20px);
+      background: #c9a227;
+    }
+
+    .toggle-text {
+      color: #d4c4a8;
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+    }
+
+    /* Private Entry Styling */
+    .gallery-item.private-entry {
+      border-color: #c9a227;
+      position: relative;
+    }
+
+    .gallery-item.private-entry::after {
+      content: '🔒 DM Only';
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(201, 162, 39, 0.9);
+      color: #1a0808;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-family: 'Cinzel', serif;
+      font-weight: 600;
+      z-index: 10;
+    }
+
+    .publish-btn {
+      background: rgba(201, 162, 39, 0.3) !important;
+      border-color: #c9a227 !important;
+      color: #c9a227 !important;
+    }
+
+    .publish-btn:hover {
+      background: rgba(201, 162, 39, 0.5) !important;
+    }
+
     /* Search and Sort Section */
     .search-sort-section {
       background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
@@ -1358,6 +1461,14 @@
               + Add to Gallery
             </button>
           </div>
+          <!-- DM Only: Private Toggle -->
+          <div class="private-toggle-container" id="privateToggleContainer" style="display: none;">
+            <label class="toggle-label">
+              <input type="checkbox" id="privateToggle">
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">DM Only (Private)</span>
+            </label>
+          </div>
         </div>
 
         <div class="image-preview" id="imagePreview"></div>
@@ -1400,7 +1511,7 @@
           <button class="quick-filter-btn" onclick="quickFilter('Location')">📍 Location</button>
           <button class="quick-filter-btn" onclick="quickFilter('Item')">⚔️ Item</button>
           <button class="quick-filter-btn" onclick="quickFilter('NPC')">🧙 NPC</button>
-          <button class="quick-filter-btn" onclick="quickFilter('Monster')">👹 Monster</button>
+          <button class="quick-filter-btn" onclick="quickFilter('Enemies')">👹 Enemies</button>
         </div>
       </div>
 
@@ -1524,13 +1635,17 @@
     let searchQuery = '';
     let currentSort = 'date-desc';
     let isAdmin = false;
+    let isDM = false;
+    
+    // Dungeon Master email - only this user can see private entries and the private toggle
+    const DM_EMAIL = 'ericacookiechou@gmail.com';
     
     // Your Google account user ID - set this after first sign-in
     // You'll see it logged in console when you sign in
     const ADMIN_UID = null; // Will be set to allow anyone signed in to edit for now
     
-    // Default tags that should always exist
-    const defaultTags = ['The Experienced', 'Location', 'Item', 'NPC', 'Monster'];
+    // No default tags - users create their own
+    const defaultTags = [];
 
     // DOM Elements
     const imageInput = document.getElementById('imageInput');
@@ -1557,10 +1672,13 @@
       
       if (user) {
         // Log UID so you can set ADMIN_UID
-        console.log('Signed in as:', user.uid);
+        console.log('Signed in as:', user.uid, user.email);
         
         // Check if user is admin (if ADMIN_UID is set, only that user can edit; otherwise anyone signed in can edit)
         isAdmin = ADMIN_UID ? (user.uid === ADMIN_UID) : true;
+        
+        // Check if user is the Dungeon Master
+        isDM = user.email === DM_EMAIL;
         
         document.getElementById('userAvatar').src = user.photoURL || '';
         document.getElementById('userName').textContent = user.displayName || user.email;
@@ -1568,6 +1686,7 @@
         authSection.style.display = 'none';
       } else {
         isAdmin = false;
+        isDM = false;
         document.getElementById('userBar').style.display = 'none';
         authSection.style.display = 'flex';
         authSection.classList.remove('logged-out');
@@ -1585,6 +1704,8 @@
       const controls = document.querySelector('.controls');
       const editButtons = document.querySelectorAll('.edit-tags-btn, .delete-btn');
       const titleInputs = document.querySelectorAll('.gallery-item .title-input');
+      const privateToggle = document.getElementById('privateToggleContainer');
+      const publishBtns = document.querySelectorAll('.publish-btn');
       
       if (isAdmin) {
         if (controls) controls.style.display = 'block';
@@ -1595,6 +1716,14 @@
         editButtons.forEach(btn => btn.style.display = 'none');
         titleInputs.forEach(input => input.disabled = true);
       }
+      
+      // Only show private toggle and publish buttons for DM
+      if (privateToggle) {
+        privateToggle.style.display = isDM ? 'flex' : 'none';
+      }
+      publishBtns.forEach(btn => {
+        btn.style.display = isDM ? 'inline-block' : 'none';
+      });
     }
 
     // Sign in with Google
@@ -1741,14 +1870,14 @@
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    // Migrate old user data to public collection
+    // Migrate old user data to public collection and ensure all items have isPrivate field
     async function migrateOldData() {
       if (!currentUser) {
         showToast('Please sign in first', true);
         return;
       }
 
-      if (!confirm('This will copy your old entries to the public database. Continue?')) {
+      if (!confirm('This will migrate entries and ensure all have the new features. Continue?')) {
         return;
       }
 
@@ -1774,6 +1903,11 @@
         for (const doc of oldItemsSnapshot.docs) {
           const oldItem = { id: doc.id, ...doc.data() };
           
+          // Ensure isPrivate field exists and is false (public)
+          if (oldItem.isPrivate === undefined) {
+            oldItem.isPrivate = false;
+          }
+          
           // Check if item already exists in public collection
           const existingItem = items.find(i => i.id === oldItem.id);
           if (!existingItem) {
@@ -1782,15 +1916,25 @@
             migratedCount++;
           }
         }
+        
+        // Also update any existing public items that don't have isPrivate field
+        let updatedCount = 0;
+        for (const item of items) {
+          if (item.isPrivate === undefined) {
+            item.isPrivate = false;
+            await db.collection('public').doc('data').collection('items').doc(item.id).set(item);
+            updatedCount++;
+          }
+        }
 
         renderTags();
         renderGallery();
         setSyncStatus('');
         
-        if (migratedCount > 0) {
-          showToast(`Migrated ${migratedCount} entries successfully!`);
+        if (migratedCount > 0 || updatedCount > 0) {
+          showToast(`Migrated ${migratedCount} entries, updated ${updatedCount} existing entries!`);
         } else {
-          showToast('No new entries to migrate');
+          showToast('All entries are up to date');
         }
         
         // Hide migrate button after successful migration
@@ -1858,6 +2002,7 @@
           hoverText: document.getElementById('hoverTextInput').value || '',
           text: textInput.value || '',
           tags: entryTags,
+          isPrivate: isDM ? document.getElementById('privateToggle').checked : false,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
@@ -1877,6 +2022,7 @@
         document.getElementById('entryTagsInput').value = '';
         document.getElementById('selectedTagsPreview').innerHTML = '';
         imagePreview.innerHTML = '';
+        if (isDM) document.getElementById('privateToggle').checked = false;
         
         showToast('Entry added successfully!');
       } catch (error) {
@@ -2064,6 +2210,11 @@
       // Start with all items
       let filteredItems = [...items];
       
+      // Filter out private entries for non-DM users
+      if (!isDM) {
+        filteredItems = filteredItems.filter(item => !item.isPrivate);
+      }
+      
       // Apply tag filter
       if (currentFilter) {
         filteredItems = filteredItems.filter(item => item.tags.includes(currentFilter));
@@ -2094,7 +2245,7 @@
       emptyState.style.display = 'none';
 
       gallery.innerHTML = filteredItems.map(item => `
-        <div class="gallery-item" data-id="${item.id}">
+        <div class="gallery-item ${item.isPrivate ? 'private-entry' : ''}" data-id="${item.id}">
           <div class="image-container" onclick="openDetailModal('${item.id}')">
             <img src="${item.image}" alt="${item.title}">
             <div class="overlay" id="overlay-${item.id}">
@@ -2102,19 +2253,14 @@
             </div>
           </div>
           <div class="item-footer">
-            <input 
-              type="text" 
-              class="title-input" 
-              value="${item.title}" 
-              onchange="updateTitle('${item.id}', this.value)"
-              onclick="event.stopPropagation()"
-            >
+            <div class="title-display">${item.title}</div>
             <div class="item-tags">
               ${item.tags.map(tag => `
                 <span class="item-tag" onclick="filterByTag('${tag}')">${tag}</span>
               `).join('')}
             </div>
             <div class="item-actions">
+              ${item.isPrivate ? `<button class="edit-tags-btn publish-btn" onclick="publishItem('${item.id}')">📢 Publish</button>` : ''}
               <button class="edit-tags-btn" onclick="openEditModal('${item.id}')">✏️ Edit</button>
               <button class="edit-tags-btn" onclick="openTagModal('${item.id}')">🏷️ Tags</button>
               <button class="delete-btn" onclick="deleteItem('${item.id}')">🗑️ Delete</button>
@@ -2125,6 +2271,21 @@
       
       // Update edit buttons visibility based on permissions
       updateUIForPermissions();
+    }
+
+    // Publish a private item (make it public)
+    async function publishItem(id) {
+      if (!isDM) return;
+      
+      const item = items.find(i => i.id === id);
+      if (!item) return;
+      
+      if (!confirm('Make this entry public? This cannot be undone.')) return;
+      
+      item.isPrivate = false;
+      await saveItemToFirestore(item);
+      renderGallery();
+      showToast('Entry published!');
     }
 
     // Open detail modal to view full text
