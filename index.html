@@ -1309,10 +1309,30 @@
       border: 2px solid #5a1515;
       border-radius: 4px;
       min-height: 300px;
+      max-height: 75vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
+      overflow: auto;
+      position: relative;
+    }
+
+    .map-image-wrapper::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    .map-image-wrapper::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.3);
+    }
+
+    .map-image-wrapper::-webkit-scrollbar-thumb {
+      background: #5a1515;
+      border-radius: 5px;
+    }
+
+    .map-image-wrapper::-webkit-scrollbar-thumb:hover {
+      background: #8b0000;
     }
 
     .map-image-wrapper img {
@@ -1326,16 +1346,62 @@
       font-style: italic;
     }
 
+    /* Map Zoom Controls */
+    .map-zoom-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 15px;
+      padding: 10px 15px;
+      background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+      border: 1px solid #3d1515;
+      border-radius: 4px;
+    }
+
+    .map-zoom-controls label {
+      color: #c9a227;
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      margin-bottom: 0;
+    }
+
+    .zoom-btn {
+      padding: 8px 14px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #5a1515;
+      color: #d4c4a8;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: all 0.2s;
+    }
+
+    .zoom-btn:hover {
+      border-color: #8b0000;
+      background: rgba(139, 0, 0, 0.2);
+    }
+
+    .zoom-level {
+      color: #d4c4a8;
+      min-width: 50px;
+      text-align: center;
+      font-family: 'Crimson Text', serif;
+    }
+
+    .zoom-btn-reset {
+      margin-left: 10px;
+    }
+
     /* Map Drawing */
     .map-canvas-container {
       position: relative;
       display: inline-block;
+      transform-origin: center center;
+      transition: transform 0.1s ease-out;
     }
 
     .map-canvas-container img {
       display: block;
-      max-width: 100%;
-      max-height: 80vh;
     }
 
     #mapDrawingCanvas {
@@ -1347,6 +1413,14 @@
 
     #mapDrawingCanvas.drawing-disabled {
       pointer-events: none;
+    }
+
+    #mapDrawingCanvas.panning {
+      cursor: grab;
+    }
+
+    #mapDrawingCanvas.panning:active {
+      cursor: grabbing;
     }
 
     .map-drawing-controls {
@@ -2440,6 +2514,16 @@
       <!-- ============== MAP TAB ============== -->
       <div class="tab-content" id="mapTab">
         <h2 class="tab-title">Map of Barovia</h2>
+        
+        <!-- Zoom Controls (visible to all) -->
+        <div class="map-zoom-controls" id="mapZoomControls" style="display: none;">
+          <label>Zoom:</label>
+          <button class="zoom-btn" onclick="zoomMap(-0.25)" title="Zoom Out">−</button>
+          <span class="zoom-level" id="zoomLevelDisplay">100%</span>
+          <button class="zoom-btn" onclick="zoomMap(0.25)" title="Zoom In">+</button>
+          <button class="zoom-btn zoom-btn-reset" onclick="resetMapZoom()" title="Reset Zoom">⟲ Reset</button>
+          <button class="zoom-btn" onclick="fitMapToView()" title="Fit to View">⊡ Fit</button>
+        </div>
         
         <!-- Drawing Controls (DM only) -->
         <div class="map-drawing-controls" id="mapDrawingControls">
@@ -3890,6 +3974,11 @@
     let brushSize = 3;
     let drawingHistory = [];
     let startX, startY;
+    
+    // Zoom variables
+    let mapZoomLevel = 1;
+    const MIN_ZOOM = 0.25;
+    const MAX_ZOOM = 4;
 
     function setupMapCanvas() {
       const mapImage = document.getElementById('mapImage');
@@ -3917,8 +4006,92 @@
       mapCanvas.addEventListener('touchmove', handleTouchMove);
       mapCanvas.addEventListener('touchend', stopDrawing);
       
+      // Mouse wheel zoom
+      const mapWrapper = document.getElementById('mapImageWrapper');
+      if (mapWrapper) {
+        mapWrapper.addEventListener('wheel', handleMapWheel, { passive: false });
+      }
+      
       // Initially disable drawing
       mapCanvas.classList.add('drawing-disabled');
+      
+      // Show zoom controls
+      const zoomControls = document.getElementById('mapZoomControls');
+      if (zoomControls) zoomControls.style.display = 'flex';
+      
+      // Apply initial zoom
+      applyMapZoom();
+    }
+
+    // ============== MAP ZOOM FUNCTIONS ==============
+    function zoomMap(delta) {
+      const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, mapZoomLevel + delta));
+      if (newZoom !== mapZoomLevel) {
+        mapZoomLevel = newZoom;
+        applyMapZoom();
+      }
+    }
+
+    function resetMapZoom() {
+      mapZoomLevel = 1;
+      applyMapZoom();
+      // Center the view
+      const wrapper = document.getElementById('mapImageWrapper');
+      if (wrapper) {
+        wrapper.scrollLeft = 0;
+        wrapper.scrollTop = 0;
+      }
+    }
+
+    function fitMapToView() {
+      const wrapper = document.getElementById('mapImageWrapper');
+      const container = document.getElementById('mapCanvasContainer');
+      const mapImage = document.getElementById('mapImage');
+      
+      if (!wrapper || !mapImage) return;
+      
+      const wrapperWidth = wrapper.clientWidth - 20;
+      const wrapperHeight = wrapper.clientHeight - 20;
+      const imageWidth = mapImage.naturalWidth;
+      const imageHeight = mapImage.naturalHeight;
+      
+      const scaleX = wrapperWidth / imageWidth;
+      const scaleY = wrapperHeight / imageHeight;
+      
+      mapZoomLevel = Math.min(scaleX, scaleY, 1);
+      applyMapZoom();
+    }
+
+    function applyMapZoom() {
+      const container = document.getElementById('mapCanvasContainer');
+      const mapImage = document.getElementById('mapImage');
+      const zoomDisplay = document.getElementById('zoomLevelDisplay');
+      
+      if (container && mapImage) {
+        const width = mapImage.naturalWidth * mapZoomLevel;
+        const height = mapImage.naturalHeight * mapZoomLevel;
+        
+        mapImage.style.width = width + 'px';
+        mapImage.style.height = height + 'px';
+        
+        if (mapCanvas) {
+          mapCanvas.style.width = width + 'px';
+          mapCanvas.style.height = height + 'px';
+        }
+      }
+      
+      if (zoomDisplay) {
+        zoomDisplay.textContent = Math.round(mapZoomLevel * 100) + '%';
+      }
+    }
+
+    function handleMapWheel(e) {
+      // Only zoom with Ctrl/Cmd + wheel
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? -0.1 : 0.1;
+        zoomMap(delta);
+      }
     }
 
     function toggleDrawingMode(enabled) {
