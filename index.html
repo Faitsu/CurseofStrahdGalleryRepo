@@ -2788,8 +2788,8 @@
       <div class="modal-header">
         <h3 id="documentModalTitle">Document Title</h3>
         <div class="modal-header-actions">
-          <button class="btn-icon dm-only-btn" onclick="editDocument()" title="Edit" style="display:none;">✏️</button>
-          <button class="btn-icon btn-icon-danger dm-only-btn" onclick="deleteDocument()" title="Delete" style="display:none;">🗑️</button>
+          <button class="btn-icon" onclick="editDocument()" title="Edit">✏️</button>
+          <button class="btn-icon btn-icon-danger" onclick="deleteDocument()" title="Delete">🗑️</button>
           <button class="modal-close" onclick="closeDocumentModal()">&times;</button>
         </div>
       </div>
@@ -2952,12 +2952,12 @@
     auth.onAuthStateChanged(async (user) => {
       currentUser = user;
       
+      // Everyone can edit (public editing enabled)
+      isAdmin = true;
+      
       if (user) {
         // Log UID so you can set ADMIN_UID
         console.log('Signed in as:', user.uid, user.email);
-        
-        // Check if user is admin (if ADMIN_UID is set, only that user can edit; otherwise anyone signed in can edit)
-        isAdmin = ADMIN_UID ? (user.uid === ADMIN_UID) : true;
         
         // Check if user is the Dungeon Master
         isDM = user.email === DM_EMAIL;
@@ -2967,7 +2967,6 @@
         document.getElementById('userBar').style.display = 'flex';
         authSection.style.display = 'none';
       } else {
-        isAdmin = false;
         isDM = false;
         document.getElementById('userBar').style.display = 'none';
         authSection.style.display = 'flex';
@@ -2990,26 +2989,30 @@
       const publishBtns = document.querySelectorAll('.publish-btn');
       const dmOnlyBtns = document.querySelectorAll('.dm-only-btn');
       
-      // DM-only controls for all tabs
-      const mapControls = document.getElementById('mapControls');
-      const mapDescControls = document.getElementById('mapDescControls');
+      // Public editing controls (always visible)
       const questAddControls = document.getElementById('questAddControls');
       const folderAddControls = document.getElementById('folderAddControls');
       const questActionBtns = document.querySelectorAll('.quest-actions');
       const folderActionBtns = document.querySelectorAll('.folder-actions');
       const docAddSections = document.querySelectorAll('.document-add-section');
       
-      if (isAdmin) {
-        if (controls) controls.style.display = 'block';
-        editButtons.forEach(btn => { if (btn) btn.style.display = 'inline-block'; });
-        titleInputs.forEach(input => { if (input) input.disabled = false; });
-      } else {
-        if (controls) controls.style.display = 'none';
-        editButtons.forEach(btn => { if (btn) btn.style.display = 'none'; });
-        titleInputs.forEach(input => { if (input) input.disabled = true; });
-      }
+      // DM-only controls
+      const mapControls = document.getElementById('mapControls');
+      const mapDescControls = document.getElementById('mapDescControls');
       
-      // Only show private toggle and publish buttons for DM
+      // Public editing - always show these controls
+      if (controls) controls.style.display = 'block';
+      editButtons.forEach(btn => { if (btn) btn.style.display = 'inline-block'; });
+      titleInputs.forEach(input => { if (input) input.disabled = false; });
+      
+      // Quest and Document controls - visible to all for editing
+      if (questAddControls) questAddControls.style.display = 'block';
+      if (folderAddControls) folderAddControls.style.display = 'flex';
+      questActionBtns.forEach(el => { if (el) el.style.display = 'flex'; });
+      folderActionBtns.forEach(el => { if (el) el.style.display = 'flex'; });
+      docAddSections.forEach(el => { if (el) el.style.display = 'flex'; });
+      
+      // DM-only: private toggle and publish buttons
       if (privateToggle) {
         privateToggle.style.display = isDM ? 'flex' : 'none';
       }
@@ -3017,25 +3020,20 @@
         if (btn) btn.style.display = isDM ? 'inline-block' : 'none';
       });
       
-      // DM controls for other tabs
+      // DM-only: map controls
       if (mapControls) mapControls.style.display = isDM ? 'flex' : 'none';
       if (mapDescControls) mapDescControls.style.display = isDM ? 'flex' : 'none';
-      if (questAddControls) questAddControls.style.display = isDM ? 'block' : 'none';
-      if (folderAddControls) folderAddControls.style.display = isDM ? 'flex' : 'none';
-      questActionBtns.forEach(el => { if (el) el.style.display = isDM ? 'flex' : 'none'; });
-      folderActionBtns.forEach(el => { if (el) el.style.display = isDM ? 'flex' : 'none'; });
-      docAddSections.forEach(el => { if (el) el.style.display = isDM ? 'flex' : 'none'; });
       dmOnlyBtns.forEach(btn => { if (btn) btn.style.display = isDM ? 'inline-block' : 'none'; });
       
-      // Drag handles for quests (only visible to DM)
+      // Drag handles for quests (visible to all for reordering)
       const dragHandles = document.querySelectorAll('.drag-handle');
-      dragHandles.forEach(el => { if (el) el.style.display = isDM ? 'block' : 'none'; });
+      dragHandles.forEach(el => { if (el) el.style.display = 'block'; });
       
-      // Drag handles for folders and documents (only visible to DM)
+      // Drag handles for folders and documents (visible to all)
       const folderDragHandles = document.querySelectorAll('.folder-drag-handle');
-      folderDragHandles.forEach(el => { if (el) el.style.display = isDM ? 'block' : 'none'; });
+      folderDragHandles.forEach(el => { if (el) el.style.display = 'block'; });
       const docDragHandles = document.querySelectorAll('.doc-drag-handle');
-      docDragHandles.forEach(el => { if (el) el.style.display = isDM ? 'block' : 'none'; });
+      docDragHandles.forEach(el => { if (el) el.style.display = 'block'; });
       
       // Map drawing controls (only visible to DM)
       const mapDrawingControls = document.getElementById('mapDrawingControls');
@@ -4533,8 +4531,6 @@
     }
 
     async function addQuest() {
-      if (!isDM) return;
-      
       const questType = document.querySelector('input[name="questType"]:checked').value;
       const title = document.getElementById('questTitleInput').value.trim();
       const description = questType === 'quest' ? document.getElementById('questDescInput').value : '';
@@ -4611,7 +4607,7 @@
     }
 
     async function saveQuestEdit() {
-      if (!currentEditingQuest || !isDM) return;
+      if (!currentEditingQuest) return;
       
       const questType = document.querySelector('input[name="editQuestType"]:checked').value;
       
@@ -4644,8 +4640,6 @@
     }
 
     async function completeQuest(id) {
-      if (!isDM) return;
-      
       const quest = quests.find(q => q.id === id);
       if (!quest) return;
       
@@ -4663,7 +4657,7 @@
     }
 
     async function deleteQuest(id) {
-      if (!isDM || !confirm('Delete this quest?')) return;
+      if (!confirm('Delete this quest?')) return;
       
       setSyncStatus('Deleting...');
       try {
@@ -4683,8 +4677,6 @@
 
     // Setup drag and drop for quests
     function setupQuestDragAndDrop() {
-      if (!isDM) return;
-      
       const questItems = document.querySelectorAll('.quest-item[draggable="true"]');
       
       questItems.forEach(item => {
@@ -4738,8 +4730,6 @@
 
     // Reorder quests after drag and drop
     async function reorderQuests(draggedId, targetId) {
-      if (!isDM) return;
-      
       // Get non-completed quests sorted by order
       const activeQuests = quests
         .filter(q => !q.completed)
@@ -4895,8 +4885,6 @@
 
     // Setup drag and drop for folders and documents
     function setupFolderDragAndDrop() {
-      if (!isDM) return;
-      
       // Folder drag and drop
       const folderItems = document.querySelectorAll('.folder[draggable="true"]');
       folderItems.forEach(item => {
@@ -5013,8 +5001,6 @@
     }
 
     async function reorderFolders(draggedId, targetId) {
-      if (!isDM) return;
-      
       const draggedFolder = folders.find(f => f.id === draggedId);
       const targetFolder = folders.find(f => f.id === targetId);
       
@@ -5066,8 +5052,6 @@
     }
 
     async function reorderDocuments(draggedInfo, targetFolderId, targetDocId) {
-      if (!isDM) return;
-      
       // For now, only support reordering within the same folder
       if (draggedInfo.folderId !== targetFolderId) {
         showToast('Can only reorder documents within the same folder', true);
@@ -5099,8 +5083,6 @@
     }
 
     async function addFolder(parentId = null) {
-      if (!isDM) return;
-      
       const name = document.getElementById('newFolderInput').value.trim();
       if (!name) {
         showToast('Please enter a folder name', true);
@@ -5132,8 +5114,6 @@
     }
 
     async function addSubfolder(parentId) {
-      if (!isDM) return;
-      
       const name = prompt('Enter subfolder name:');
       if (!name || !name.trim()) return;
       
@@ -5160,8 +5140,6 @@
     }
 
     async function editFolderName(folderId) {
-      if (!isDM) return;
-      
       const folder = folders.find(f => f.id === folderId);
       if (!folder) return;
       
@@ -5184,7 +5162,7 @@
     }
 
     async function deleteFolder(id) {
-      if (!isDM || !confirm('Delete this folder and all its documents?')) return;
+      if (!confirm('Delete this folder and all its documents?')) return;
       
       // Also delete any subfolders
       const subfolders = folders.filter(f => f.parentId === id);
@@ -5210,8 +5188,6 @@
     }
 
     async function addDocument(folderId) {
-      if (!isDM) return;
-      
       const titleInput = document.getElementById(`newDocTitle-${folderId}`);
       const contentInput = document.getElementById(`newDocContent-${folderId}`);
       
@@ -5294,7 +5270,7 @@
     }
 
     function editDocument() {
-      if (!currentEditingDocument || !isDM) return;
+      if (!currentEditingDocument) return;
       
       document.getElementById('editDocTitleInput').value = currentEditingDocument.title;
       document.getElementById('editDocContentInput').value = currentEditingDocument.content || '';
@@ -5308,7 +5284,7 @@
     }
 
     async function saveDocumentEdit() {
-      if (!currentEditingDocument || !currentEditingFolder || !isDM) return;
+      if (!currentEditingDocument || !currentEditingFolder) return;
       
       currentEditingDocument.title = document.getElementById('editDocTitleInput').value.trim();
       currentEditingDocument.content = document.getElementById('editDocContentInput').value;
@@ -5341,7 +5317,7 @@
     }
 
     async function deleteDocument() {
-      if (!currentEditingDocument || !currentEditingFolder || !isDM) return;
+      if (!currentEditingDocument || !currentEditingFolder) return;
       if (!confirm('Delete this document?')) return;
       
       currentEditingFolder.documents = currentEditingFolder.documents.filter(d => d.id !== currentEditingDocument.id);
