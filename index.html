@@ -2527,6 +2527,8 @@
             <select id="sortSelect" onchange="applyFilters()">
               <option value="date-desc">Newest First</option>
               <option value="date-asc">Oldest First</option>
+              <option value="updated-desc">Recently Updated</option>
+              <option value="updated-asc">Oldest Updated</option>
               <option value="name-asc">Name (A-Z)</option>
               <option value="name-desc">Name (Z-A)</option>
             </select>
@@ -3123,10 +3125,42 @@
         renderTags();
         renderGallery();
         setSyncStatus('');
+        
+        // Auto-backfill descriptionUpdatedAt for items that don't have it (DM only, one-time)
+        if (isDM) {
+          await backfillDescriptionTimestamps();
+        }
       } catch (error) {
         console.error('Load error:', error);
         setSyncStatus('Error loading', true);
         showToast('Failed to load data', true);
+      }
+    }
+
+    // Backfill descriptionUpdatedAt for existing items that don't have it
+    async function backfillDescriptionTimestamps() {
+      const itemsNeedingBackfill = items.filter(item => !item.descriptionUpdatedAt && item.text);
+      
+      if (itemsNeedingBackfill.length === 0) return;
+      
+      console.log(`Backfilling descriptionUpdatedAt for ${itemsNeedingBackfill.length} items...`);
+      
+      try {
+        const batch = db.batch();
+        
+        itemsNeedingBackfill.forEach(item => {
+          // Use createdAt as the initial descriptionUpdatedAt, or current time if no createdAt
+          const timestamp = item.createdAt || firebase.firestore.FieldValue.serverTimestamp();
+          item.descriptionUpdatedAt = timestamp;
+          
+          const ref = db.collection('public').doc('data').collection('items').doc(item.id);
+          batch.update(ref, { descriptionUpdatedAt: timestamp });
+        });
+        
+        await batch.commit();
+        console.log('Backfill complete!');
+      } catch (error) {
+        console.error('Backfill error:', error);
       }
     }
 
@@ -3535,6 +3569,20 @@
             return dateA - dateB;
           });
           break;
+        case 'updated-desc':
+          sorted.sort((a, b) => {
+            const dateA = a.descriptionUpdatedAt?.toDate?.() || a.createdAt?.toDate?.() || new Date(parseInt(a.id));
+            const dateB = b.descriptionUpdatedAt?.toDate?.() || b.createdAt?.toDate?.() || new Date(parseInt(b.id));
+            return dateB - dateA;
+          });
+          break;
+        case 'updated-asc':
+          sorted.sort((a, b) => {
+            const dateA = a.descriptionUpdatedAt?.toDate?.() || a.createdAt?.toDate?.() || new Date(parseInt(a.id));
+            const dateB = b.descriptionUpdatedAt?.toDate?.() || b.createdAt?.toDate?.() || new Date(parseInt(b.id));
+            return dateA - dateB;
+          });
+          break;
         case 'name-asc':
           sorted.sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase()));
           break;
@@ -3725,9 +3773,16 @@
       setSyncStatus('Saving...');
 
       try {
+        const newDescription = document.getElementById('editTextInput').value;
+        
+        // Check if description changed - if so, update the timestamp
+        if (item.text !== newDescription) {
+          item.descriptionUpdatedAt = firebase.firestore.FieldValue.serverTimestamp();
+        }
+        
         item.title = document.getElementById('editTitleInput').value || 'Untitled';
         item.hoverText = document.getElementById('editHoverTextInput').value;
-        item.text = document.getElementById('editTextInput').value;
+        item.text = newDescription;
         
         // Check if image was changed
         if (editImageFile) {
