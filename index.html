@@ -2254,6 +2254,265 @@
       font-family: 'Crimson Text', serif;
     }
 
+    /* ============== STRESS TRACKER STYLES ============== */
+    .stress-rules-section {
+      background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+      border: 2px solid #3d1515;
+      border-radius: 4px;
+      margin-bottom: 25px;
+      overflow: hidden;
+    }
+
+    .stress-rules-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background: rgba(139, 0, 0, 0.2);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .stress-rules-header:hover {
+      background: rgba(139, 0, 0, 0.3);
+    }
+
+    .stress-rules-header h3 {
+      margin: 0;
+      color: #c9a227;
+      font-family: 'Cinzel', serif;
+    }
+
+    .stress-rules-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .stress-rules-toggle {
+      color: #c9a227;
+      font-size: 1.2rem;
+      transition: transform 0.3s;
+    }
+
+    .stress-rules-section.collapsed .stress-rules-toggle {
+      transform: rotate(-90deg);
+    }
+
+    .stress-rules-content {
+      padding: 20px;
+      border-top: 1px solid #3d1515;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .stress-rules-section.collapsed .stress-rules-content {
+      display: none;
+    }
+
+    .stress-rules-view h4 {
+      color: #c9a227;
+      font-family: 'Cinzel', serif;
+      margin-top: 15px;
+      margin-bottom: 10px;
+    }
+
+    .stress-rules-view h4:first-child {
+      margin-top: 0;
+    }
+
+    .stress-rules-view a {
+      color: #c9a227;
+      text-decoration: underline;
+    }
+
+    .stress-rules-view a:hover {
+      color: #e0c060;
+    }
+
+    .stress-rules-view ul {
+      padding-left: 20px;
+    }
+
+    .stress-rules-view li {
+      margin-bottom: 10px;
+    }
+
+    .stress-rules-edit textarea {
+      width: 100%;
+      min-height: 300px;
+      margin-bottom: 15px;
+      font-family: 'Crimson Text', serif;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .stress-rules-edit-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .stress-add-section {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+      padding: 15px;
+      background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+      border: 1px solid #3d1515;
+      border-radius: 4px;
+    }
+
+    .stress-add-section input {
+      flex: 1;
+      max-width: 300px;
+    }
+
+    .stress-characters-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .stress-character-card {
+      background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
+      border: 2px solid #3d1515;
+      border-radius: 4px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      transition: all 0.3s;
+    }
+
+    .stress-character-card:hover {
+      border-color: #5a1515;
+    }
+
+    .stress-character-card.high-stress {
+      border-color: #8b0000;
+      box-shadow: 0 0 15px rgba(139, 0, 0, 0.3);
+    }
+
+    .stress-character-card.critical-stress {
+      border-color: #ff4444;
+      box-shadow: 0 0 20px rgba(255, 68, 68, 0.4);
+      animation: stressPulse 2s infinite;
+    }
+
+    @keyframes stressPulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(255, 68, 68, 0.4); }
+      50% { box-shadow: 0 0 30px rgba(255, 68, 68, 0.6); }
+    }
+
+    .stress-character-name {
+      flex: 1;
+      font-family: 'Cinzel', serif;
+      font-size: 1.3rem;
+      color: #c9a227;
+    }
+
+    .stress-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .stress-btn {
+      width: 40px;
+      height: 40px;
+      border: 2px solid #5a1515;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.4);
+      color: #d4c4a8;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stress-btn:hover {
+      border-color: #8b0000;
+      background: rgba(139, 0, 0, 0.3);
+    }
+
+    .stress-btn.decrease {
+      color: #4a9;
+    }
+
+    .stress-btn.decrease:hover {
+      border-color: #4a9;
+      background: rgba(68, 170, 153, 0.2);
+    }
+
+    .stress-btn.increase {
+      color: #c44;
+    }
+
+    .stress-btn.increase:hover {
+      border-color: #c44;
+      background: rgba(204, 68, 68, 0.2);
+    }
+
+    .stress-value {
+      font-family: 'Cinzel', serif;
+      font-size: 2rem;
+      font-weight: bold;
+      min-width: 60px;
+      text-align: center;
+      color: #d4c4a8;
+    }
+
+    .stress-value.high {
+      color: #ff8844;
+    }
+
+    .stress-value.critical {
+      color: #ff4444;
+      text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+    }
+
+    .stress-label {
+      font-size: 0.85rem;
+      color: rgba(212, 196, 168, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .stress-delete-btn {
+      background: none;
+      border: none;
+      color: #5a1515;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 5px;
+      opacity: 0.6;
+      transition: all 0.2s;
+    }
+
+    .stress-delete-btn:hover {
+      color: #8b0000;
+      opacity: 1;
+    }
+
+    .stress-history-btn {
+      background: none;
+      border: none;
+      color: #5a1515;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 5px;
+      opacity: 0.6;
+      transition: all 0.2s;
+    }
+
+    .stress-history-btn:hover {
+      color: #c9a227;
+      opacity: 1;
+    }
+
     /* Search and Sort Section */
     .search-sort-section {
       background: linear-gradient(180deg, #1a0808 0%, #0d0404 100%);
@@ -2446,6 +2705,7 @@
         <button class="tab-btn" onclick="switchTab('map')">🗺️ Map of Barovia</button>
         <button class="tab-btn" onclick="switchTab('quests')">⚔️ Quest Log</button>
         <button class="tab-btn" onclick="switchTab('documents')">📜 Documents</button>
+        <button class="tab-btn" onclick="switchTab('stress')">😰 Stress Tracker</button>
       </div>
 
       <!-- ============== GALLERY TAB ============== -->
@@ -2690,6 +2950,45 @@
           <p class="empty-text" id="emptyFoldersText">No folders yet.</p>
         </div>
       </div>
+
+      <!-- ============== STRESS TRACKER TAB ============== -->
+      <div class="tab-content" id="stressTab">
+        <h2 class="tab-title">😰 Stress Tracker</h2>
+        
+        <!-- Stress Rules Blurb -->
+        <div class="stress-rules-section">
+          <div class="stress-rules-header" onclick="toggleStressRules()">
+            <h3>📜 Stress Rules</h3>
+            <div class="stress-rules-header-actions" onclick="event.stopPropagation()">
+              <button class="btn-icon" id="stressRulesEditBtn" onclick="toggleStressRulesEdit()" title="Edit Rules">✏️</button>
+              <span class="stress-rules-toggle" id="stressRulesToggle">▼</span>
+            </div>
+          </div>
+          <div class="stress-rules-content" id="stressRulesContent">
+            <div class="stress-rules-view markdown-content" id="stressRulesView">
+              <!-- Will be populated from Firebase or default -->
+            </div>
+            <div class="stress-rules-edit" id="stressRulesEdit" style="display: none;">
+              <textarea id="stressRulesInput" rows="15" placeholder="Enter stress rules (supports Markdown)..."></textarea>
+              <div class="stress-rules-edit-actions">
+                <button class="btn btn-secondary" onclick="cancelStressRulesEdit()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveStressRules()">💾 Save Rules</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Add Character Section -->
+        <div class="stress-add-section" id="stressAddSection">
+          <input type="text" id="newCharacterName" placeholder="Character name...">
+          <button class="btn btn-primary" onclick="addStressCharacter()">+ Add Character</button>
+        </div>
+        
+        <!-- Characters List -->
+        <div class="stress-characters-list" id="stressCharactersList">
+          <p class="empty-text" id="emptyStressText">No characters being tracked yet.</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2917,9 +3216,26 @@
     let mapData = { image: '', description: '' };
     let quests = [];
     let folders = [];
+    let stressCharacters = [];
+    let stressRulesData = { rules: '' };
     let currentEditingQuest = null;
     let currentEditingDocument = null;
     let currentEditingFolder = null;
+    
+    // Default stress rules (used if none saved)
+    const DEFAULT_STRESS_RULES = `## Stress
+
+Charging headlong into terrifying situations is the stock in trade for adventurers. Among the Domains of Dread, though, periods of respite between harrowing experiences can be rare. Even the hardiest adventurers find themselves worn down over time, their performance suffering as they struggle to cope with the dread and despair.
+
+Various circumstances might cause a character stress. Stress can be tracked numerically as a **Stress Score**, increasing in trying situations and decreasing with care. At your discretion, a character's Stress Score might increase by 1 when a stressful situation arises for a character (determined by DM).
+
+**When a character makes an attack roll, an ability check, or a saving throw, they must apply their current Stress Score as a penalty to the roll.**
+
+## Reducing Stress
+
+- A character who spends an entire day relaxing or in otherwise calm circumstances reduces their Stress Score by 1 when they finish their next long rest.
+- The [calm emotions](https://www.dndbeyond.com/spells/2023-calm-emotions) spell effect used to suppress the [charmed](https://www.dndbeyond.com/sources/dnd/free-rules/rules-glossary#CharmedCondition) and [frightened](https://www.dndbeyond.com/sources/dnd/free-rules/rules-glossary#FrightenedCondition) conditions also suppresses the effects of one's Stress Score for the spell's duration.
+- A [lesser restoration](https://www.dndbeyond.com/spells/2164-lesser-restoration) spell reduces the target's Stress Score by 1, and a [greater restoration](https://www.dndbeyond.com/spells/2129-greater-restoration) spell reduces a character's Stress Score to 0.`;
     
     // Dungeon Master email - only this user can see private entries and the private toggle
     const DM_EMAIL = 'ericacookiechou@gmail.com';
@@ -3121,6 +3437,23 @@
           folders.push({ id: doc.id, ...doc.data() });
         });
         renderFolders();
+
+        // Load stress characters
+        const stressSnapshot = await db.collection('public').doc('data').collection('stressCharacters').get();
+        stressCharacters = [];
+        stressSnapshot.forEach(doc => {
+          stressCharacters.push({ id: doc.id, ...doc.data() });
+        });
+        renderStressCharacters();
+
+        // Load stress rules
+        const stressRulesDoc = await db.collection('public').doc('stressRules').get();
+        if (stressRulesDoc.exists) {
+          stressRulesData = stressRulesDoc.data();
+        } else {
+          stressRulesData = { rules: DEFAULT_STRESS_RULES };
+        }
+        renderStressRules();
 
         renderTags();
         renderGallery();
@@ -5395,6 +5728,215 @@
         console.error('Delete document error:', error);
         setSyncStatus('Error', true);
         showToast('Failed to delete document: ' + error.message, true);
+      }
+    }
+
+    // ============== STRESS TRACKER FUNCTIONS ==============
+    
+    function toggleStressRules() {
+      const section = document.querySelector('.stress-rules-section');
+      section.classList.toggle('collapsed');
+    }
+
+    function renderStressRules() {
+      const viewEl = document.getElementById('stressRulesView');
+      const inputEl = document.getElementById('stressRulesInput');
+      
+      if (!viewEl) return;
+      
+      const rulesContent = stressRulesData.rules || DEFAULT_STRESS_RULES;
+      viewEl.innerHTML = marked.parse(rulesContent);
+      
+      if (inputEl) {
+        inputEl.value = rulesContent;
+      }
+    }
+
+    function toggleStressRulesEdit() {
+      const viewEl = document.getElementById('stressRulesView');
+      const editEl = document.getElementById('stressRulesEdit');
+      const inputEl = document.getElementById('stressRulesInput');
+      
+      if (editEl.style.display === 'none') {
+        // Switch to edit mode
+        inputEl.value = stressRulesData.rules || DEFAULT_STRESS_RULES;
+        viewEl.style.display = 'none';
+        editEl.style.display = 'block';
+      } else {
+        // Switch back to view mode
+        viewEl.style.display = 'block';
+        editEl.style.display = 'none';
+      }
+    }
+
+    function cancelStressRulesEdit() {
+      const viewEl = document.getElementById('stressRulesView');
+      const editEl = document.getElementById('stressRulesEdit');
+      
+      viewEl.style.display = 'block';
+      editEl.style.display = 'none';
+    }
+
+    async function saveStressRules() {
+      const inputEl = document.getElementById('stressRulesInput');
+      const newRules = inputEl.value;
+      
+      stressRulesData.rules = newRules;
+      
+      setSyncStatus('Saving...');
+      try {
+        await db.collection('public').doc('stressRules').set(stressRulesData);
+        renderStressRules();
+        cancelStressRulesEdit();
+        setSyncStatus('');
+        showToast('Stress rules saved!');
+      } catch (error) {
+        console.error('Save stress rules error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to save rules: ' + error.message, true);
+      }
+    }
+
+    function renderStressCharacters() {
+      const container = document.getElementById('stressCharactersList');
+      const emptyText = document.getElementById('emptyStressText');
+      
+      if (!container) return;
+      
+      if (stressCharacters.length === 0) {
+        container.innerHTML = '<p class="empty-text" id="emptyStressText">No characters being tracked yet.</p>';
+        return;
+      }
+      
+      // Sort by name
+      const sorted = [...stressCharacters].sort((a, b) => a.name.localeCompare(b.name));
+      
+      container.innerHTML = sorted.map(char => {
+        const stressClass = char.stress >= 5 ? 'critical-stress' : (char.stress >= 3 ? 'high-stress' : '');
+        const valueClass = char.stress >= 5 ? 'critical' : (char.stress >= 3 ? 'high' : '');
+        
+        return `
+          <div class="stress-character-card ${stressClass}" data-id="${char.id}">
+            <div class="stress-character-name">${char.name}</div>
+            <div class="stress-controls">
+              <button class="stress-btn decrease" onclick="updateStress('${char.id}', -1)" title="Decrease Stress">−</button>
+              <div style="text-align: center;">
+                <div class="stress-value ${valueClass}">${char.stress}</div>
+                <div class="stress-label">Stress</div>
+              </div>
+              <button class="stress-btn increase" onclick="updateStress('${char.id}', 1)" title="Increase Stress">+</button>
+            </div>
+            <button class="stress-delete-btn" onclick="deleteStressCharacter('${char.id}')" title="Remove Character">🗑️</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function addStressCharacter() {
+      const nameInput = document.getElementById('newCharacterName');
+      const name = nameInput.value.trim();
+      
+      if (!name) {
+        showToast('Please enter a character name', true);
+        return;
+      }
+      
+      // Check for duplicate names
+      if (stressCharacters.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+        showToast('A character with that name already exists', true);
+        return;
+      }
+      
+      const newChar = {
+        id: Date.now().toString(),
+        name: name,
+        stress: 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        history: []
+      };
+      
+      setSyncStatus('Saving...');
+      try {
+        await db.collection('public').doc('data').collection('stressCharacters').doc(newChar.id).set(newChar);
+        stressCharacters.push(newChar);
+        renderStressCharacters();
+        nameInput.value = '';
+        setSyncStatus('');
+        showToast(`${name} added to stress tracker!`);
+      } catch (error) {
+        console.error('Add stress character error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to add character: ' + error.message, true);
+      }
+    }
+
+    async function updateStress(charId, delta) {
+      const char = stressCharacters.find(c => c.id === charId);
+      if (!char) return;
+      
+      const oldStress = char.stress;
+      const newStress = Math.max(0, char.stress + delta);
+      
+      if (newStress === oldStress) return;
+      
+      char.stress = newStress;
+      
+      // Add to history
+      if (!char.history) char.history = [];
+      char.history.push({
+        timestamp: new Date().toISOString(),
+        oldValue: oldStress,
+        newValue: newStress,
+        change: delta
+      });
+      
+      // Keep only last 50 history entries
+      if (char.history.length > 50) {
+        char.history = char.history.slice(-50);
+      }
+      
+      setSyncStatus('Saving...');
+      try {
+        await db.collection('public').doc('data').collection('stressCharacters').doc(charId).set(char);
+        renderStressCharacters();
+        setSyncStatus('');
+        
+        // Show appropriate message
+        if (delta > 0) {
+          showToast(`${char.name}'s stress increased to ${newStress}`);
+        } else {
+          showToast(`${char.name}'s stress decreased to ${newStress}`);
+        }
+        
+        // Warning for high stress
+        if (newStress >= 5 && oldStress < 5) {
+          showToast(`⚠️ ${char.name} is at critical stress!`, true);
+        }
+      } catch (error) {
+        console.error('Update stress error:', error);
+        char.stress = oldStress;
+        setSyncStatus('Error', true);
+        showToast('Failed to update stress: ' + error.message, true);
+      }
+    }
+
+    async function deleteStressCharacter(charId) {
+      const char = stressCharacters.find(c => c.id === charId);
+      if (!char) return;
+      
+      if (!confirm(`Remove ${char.name} from the stress tracker?`)) return;
+      
+      setSyncStatus('Deleting...');
+      try {
+        await db.collection('public').doc('data').collection('stressCharacters').doc(charId).delete();
+        stressCharacters = stressCharacters.filter(c => c.id !== charId);
+        renderStressCharacters();
+        setSyncStatus('');
+        showToast(`${char.name} removed from tracker`);
+      } catch (error) {
+        console.error('Delete stress character error:', error);
+        setSyncStatus('Error', true);
+        showToast('Failed to remove character: ' + error.message, true);
       }
     }
 
